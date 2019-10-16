@@ -6,4 +6,4 @@ The file Cplex_solving_in_txt.ipynb uses CPLEX to resolve all the problems and g
 
 The file Cplex_solving_in_dataframe.ipynb uses CPLEX to resolve all the problems and give total execution time. The solutions are gathered in a dataframe.
 
-The file Cplex_solving_in_dataframe.ipynb uses CPLEX to resolve all the problems and give total execution time. The solutions are gathered in a pickle, in which contains aussi the code for extracting data in form matrix.
+The file Cplex_solving_in_pickle.ipynb uses CPLEX to resolve all the problems and give total execution time. The solutions are gathered in a pickle, in which contains aussi the code for extracting data in form matrix.
