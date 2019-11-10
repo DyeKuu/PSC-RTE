@@ -7,7 +7,10 @@
 # 2) On met des mots clefs comme dans les exemples
 # 3) On explique comme dans les exemples
 # 4) On numérote comme dans les exemples (les numéros des exemples comptent)
-
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
+import pandas as pd
 #1
 #exemple 1, nombres premiers, diviseurs, example
 def est_premier(m):
@@ -29,3 +32,25 @@ def Fibo(n):
     return l[n] # la liste est de longueur n+1 donc l[n] est le dernier terme, sauf lorsque n = 0.
 
 #3
+# recupere données, récupère données, get data, seconds membres, second member
+def get_SecondMember(nom_fichier):
+    '''renvoie le vecteur des seconds membres coontenus dans le fichier nom_fichier'''
+    return np.vstack(np.array(pd.DataFrame(pd.read_pickle(nom_fichier))[0]))
+
+#4
+# récupère données, get data, solutions, Solutions
+def get_Solutions(nom_fichier):
+    '''renvoie le vecteur des soltions contenues dans le fichier nom_fichier'''
+    return np.vstack(np.array(pd.DataFrame(pd.read_pickle(nom_fichier))[0]))
+
+#5
+# overfitting, affiche la perte, loss
+def affiche_loss(history):
+    """ affiche la courbe de la loss sur le training set et le validation set. Permt de contrôler si il y a un overfitting. history est le résultat de model.fit"""
+    loss_curve = history.history["loss"]
+    loss_val_curve = history.history["val_loss"]
+    plt.plot(loss_curve, label = "Train")
+    plt.plot(loss_val_curve, label = "Val")
+    plt.legend(loc = 'upper left')
+    plt.title("Loss")
+    plt.show()
