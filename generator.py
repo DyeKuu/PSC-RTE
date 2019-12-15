@@ -1,13 +1,21 @@
 import cplex
 import numpy as np
 
-#class representing linear optimization problems. Will essentially be used to generate new linear optimization problems 
+#RTElike_lin_opt_problem is a class representing linear optimization problems.
+#It will essentially be used to generate new linear optimization problems 
 #by adding some noise (gaussian) to some chosen coefficients of a given problem. 
 
-#Parameters: name, dev (stands for standard deviation, see comment of generate_random_prob),
-#            prob (instance of the class cplex.Cplex, linear optimization problem), non_fixed_vars (subset of the variables of the
-#            linear optimization problem, contains all variables we choose not to be fixed for all RTE-like problems and thus will be
-#            affected by the noise we apply while the generation of random new problems)
+#Parameters of an instance of RTElike_lin_opt_problem :
+#           name : a string giving the name of the linear optimization problem
+#           dev : a float setting the relative deviation of the variables when generating new problems
+#           prob : an instance of the class cplex.Cplex, i.e. a linear optimization problem
+#           non_fixed_vars : a list containing all variables which will be affected by the noise
+#               when generating new problems.
+
+
+#To create a new instance of RTElike_lin_opt_problem one can give
+#either the name (string) of an instance of the class cplex.Cplex
+#or an instance of the class cplex.Cplex
 
 class RTElike_lin_opt_problem:
     def __init__(self, prob_name):
@@ -36,20 +44,20 @@ class RTElike_lin_opt_problem:
     def get_non_fixed_vars(self):
         return self.non_fixed_vars
 
-#method solves the linear optimization problem
+    
+#The method "solve" solves the linear optimization problem
 
     def solve(self):
         self.prob.solve()
 
+##### RELECTURE A REPRENDRE ICI #####
 
-
-#This method generates a single random new problem by adding a gaussian noise
-#to each variable of the RHS of the optimization problem.
+#The method generate_random_prob generates a single random new problem
+#by adding a gaussian noise to each variable of the RHS of the optimization problem.
 
 #The standard deviation of that noise in each variable is computed by multiplying the
-#value that variable takes by the factor dev, that can be set by the use of the method
-#set_deviation. Thus the standard deviation is always chosen relative to the variable's
-#value.
+#value that variable takes by the factor dev.
+#Thus the standard deviation is always chosen relative to the variable's value.
 
 #Arguments taken: name of the new problem (type: string)
 #Output: new problem (instance of the class problem)
