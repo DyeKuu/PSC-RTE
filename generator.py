@@ -60,9 +60,9 @@ class RTElike_lin_opt_problem:
 #Thus the standard deviation is always chosen relative to the variable's value.
 
 #Arguments taken: name of the new problem (type: string)
-#Output: new problem (instance of the class problem)
+#Output: new problem (instance of the class RTElike_lin_opt_problem)
 
-    def generate_random_prob(self, name):
+    def generate_random_prob(self):
         list_rhs = self.prob.linear_constraints.get_rhs()
         l = len(list_rhs)
         for elem in non_fixed_vars:
@@ -72,7 +72,7 @@ class RTElike_lin_opt_problem:
         for i in range(l):
             new_list.append((i, list_rhs[i]))
         new_prob = cplex.Cplex()  # create new problem
-        new_prob.read(name)
+        new_prob.read(self.name)
         new_prob.linear_constraints.set_rhs(new_list)  # set the RHS to the bias RHS
         new_problem = RTElike_lin_opt_problem(new_prob)  # generate a new instance of the class
         return new_problem
