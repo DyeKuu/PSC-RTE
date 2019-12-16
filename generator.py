@@ -50,8 +50,6 @@ class RTElike_lin_opt_problem:
     def solve(self):
         self.prob.solve()
 
-##### RELECTURE A REPRENDRE ICI #####
-
 #The method generate_random_prob generates a single random new problem
 #by adding a gaussian noise to each variable of the RHS of the optimization problem.
 
@@ -79,16 +77,18 @@ class RTElike_lin_opt_problem:
 
 
 
-# This method generates a given number of random new problems by adding gaussian noises
+# The method generate_random_prob_mult generates a given number of random new problems by adding gaussian noises
 # to the instance of the class the method is applied to.
 
 # Arguments taken: number of problems to be generated (type: int)
 # Output: list of the generated problems (list of instances of the class problem)
 
-    def generate_random_probs(self, int):
+    def generate_random_prob_mult(self, int):
         new_list = []
         for i in range(int):
-            new_list.append(self.generate_random_prob(self, self.name + "new_(d%)" % int))
+            new_prob = self.generate_random_prob()
+            new_prob.name = self.name + "new_(d%)" % int
+            new_list.append(new_prob)
         return(new_list)
 
 
