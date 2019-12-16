@@ -92,14 +92,11 @@ class RTElike_lin_opt_problem:
         return(new_list)
 
 
-#Test with dev = 0.1
+#We are now going to use the methods defined above
+#The code below generates 5 new problems from the problem 'petit_problem.lp' with dev = 0.1
 
 test = RTElike_lin_opt_problem('petit_probleme.lp')
 test.set_deviation(0.1)  # set the delta of the gaussian noise
-test.solve()
 test.set_non_fixed_vars([1,2,4])
-print(test.prob.solution.get_objective_value())
 
-new_prob = test.generate_random_prob('new_petit_probleme.lp')  # generate a new problem from test
-new_prob.solve()
-print(new_prob.prob.solution.get_objective_value())
+new_prob_list = test.generate_random_prob_mult(5)
