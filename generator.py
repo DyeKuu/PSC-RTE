@@ -77,7 +77,7 @@ class RTElike_lin_opt_problem:
         l = len(list_rhs)
         for elem in self.non_fixed_vars:
             val = list_rhs[elem]
-            list_rhs[elem] = val + (np.random.normal(0, val*self.dev, 1))[0]  # add gaussian noise to the RHS
+            list_rhs[elem] = val + (np.random.normal(0, abs(val)*self.dev, 1))[0]  # add gaussian noise to the RHS
         new_list = []
         for i in range(l):
             new_list.append((i, list_rhs[i]))
