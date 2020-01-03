@@ -1,6 +1,7 @@
 #The purpose of this code is to provide a user-friendly function
-#generating N random new RHS from a chosen linear optimization problem
-#and their N associated solutions
+#generating a dataset
+#with N random new RHS from a list of chosen linear optimization problems
+#and their N associated solutions.
 #The name of this function is "problem_generator"
 #For more information see its description at the end of the code
 
@@ -9,40 +10,46 @@
 
 
 
-
 import cplex
 import numpy as np
+import dataset
 
-#RTElike_lin_opt_problem is a class representing linear optimization problems.
+#lin_opt_pbs is a class representing linear optimization problems.
 #It will be used to generate new linear optimization problems 
 #by adding some noise (gaussian) to some chosen coefficients of a given problem. 
 
-#Parameters of an instance of RTElike_lin_opt_problem :
-#           name : a string giving the name of the linear optimization problem
+#Parameters of an instance of lin_opt_pbs :
+#           name_list : a list of string giving the name of the linear optimization problems
 #           dev : a float setting the relative deviation of the variables when generating new problems
-#           prob : an instance of the class cplex.Cplex, i.e. a linear optimization problem
-#           non_fixed_vars : a list containing all variables which will be affected by the noise
-#               when generating new problems.
+#           prob_list : a list of instances of the class cplex.Cplex
+#           non_fixed_vars : a list containing all indices of the variables which will be affected by the noise
+#               when generating new problems. If not given by the user, is calculated by the programm.
 
 
-#To create a new instance of RTElike_lin_opt_problem one can give
-#either the name (string) of an instance of the class cplex.Cplex
-#or an instance of the class cplex.Cplex
+#To create a new instance of lin_opt_pbs one can give
+#either a list of names (string) of files, each of which containing an instance of the class cplex.Cplex
+#or a list of instances of the class cplex.Cplex
 
-class RTElike_lin_opt_problem:
-    def __init__(self, prob_name):
-        if isinstance(prob_name, str):
-            self.dev = 0
-            self.name = prob_name
-            prob = cplex.Cplex()
-            prob.read(prob_name)
-            self.prob = prob
-            self.non_fixed_vars = []
-        if isinstance(prob_name, cplex.Cplex):
-            self.dev = 0
-            self.name = 'default'
-            self.prob = prob_name
-            self.non_fixed_vars = []
+class lin_opt_pbs:
+    def __init__(self, prob_name_list, non_fixed_vars = None):
+        n = len(prob_name_list)
+        if isinstance(prob_name_list[0], str):
+            self.name_list = prob_name_list
+            prob_list = [cplex.Cplex() for i in range(n)]
+            for i in range(n):
+                prob_list[i].read(prob_name_list[i])
+            self.prob_list = prob_list
+        if isinstance(prob_name_list[0], cplex.Cplex):
+            name_list = []
+            for i in range(n):
+                name_list.append(("problem_(%d)", i))
+            self.name_list = name_list
+            self.prob_list = prob_name_list
+        self.dev = 0
+        self.non_fixed_vars = non_fixed_vars
+        if non_fixed_vars == None :
+            self.calculate_non_fixed_vars()
+            
 
     def set_deviation(self, dev):
         self.dev = dev
@@ -56,24 +63,49 @@ class RTElike_lin_opt_problem:
     def get_non_fixed_vars(self):
         return self.non_fixed_vars
 
-    
-#The method "solve" solves the linear optimization problem
-
-    def solve(self):
-        self.prob.solve()
+    def calculate_non_fixed_vars(self):
+        n = len(self.name_list)
+        list_rhs = []
+        for i in range(n):
+            list_rhs.append(self.prob_list[i].linear_constraints.get_rhs())
+        nb_constraints = len(list_rhs[0])
+        if n == 1:
+            print("Attention, un seul problème a été fourni. Par défaut aucune variable fixée.")
+            self.set_non_fixed_vars([i for i in range(nb_constraints)])
+        constraints_max = []
+        constraints_min = []
+        for i in range(nb_constraints):
+            max = list_rhs[0][i]
+            min = list_rhs[0][i]
+            for j in range(n):
+                if list_rhs[j][i] > max:
+                    max = list_rhs[j][i]
+                if list_rhs[j][i] < min:
+                    min = list_rhs[j][i]
+            constraints_max.append(max)
+            constraints_min.append(min)
+        constraints_max = np.array(constraints_max)
+        constraints_min = np.array(constraints_min)
+        constraints_range = constraints_max - constraints_min
+        non_fixed_vars = []
+        for i in range(len(constraints_range)):
+            if constraints_range[i] == 0:
+                non_fixed_vars.append(i)
+        self.set_non_fixed_vars(non_fixed_vars)
 
 #The method generate_random_prob generates a single random new problem
-#by adding a gaussian noise to each variable of the RHS (= right hand side) of the optimization problem.
+#by adding a gaussian noise to each variable of a chosen RHS (= right hand side)
+#and adds it to self.prob_list 
 
 #The standard deviation of that noise in each variable is computed by multiplying the
 #value that variable takes by the factor dev.
 #Thus the standard deviation is always chosen relative to the variable's value.
 
-#Arguments taken: none
-#Output: new problem (instance of the class RTElike_lin_opt_problem)
+#Arguments taken: an int giving the index of the chosen optimization problem
+#Output: None (the new problem has been added to self.prob_list)
 
-    def generate_random_prob(self):
-        list_rhs = self.prob.linear_constraints.get_rhs()
+    def generate_random_prob(self, k):
+        list_rhs = self.prob_list[k].linear_constraints.get_rhs()
         l = len(list_rhs)
         for elem in self.non_fixed_vars:
             val = list_rhs[elem]
@@ -82,41 +114,40 @@ class RTElike_lin_opt_problem:
         for i in range(l):
             new_list.append((i, list_rhs[i]))
         new_prob = cplex.Cplex()  # create new problem
-        new_prob.read(self.name)
+        new_prob.read(self.name_list[k])
         new_prob.linear_constraints.set_rhs(new_list)  # set the RHS to the bias RHS
-        new_problem = RTElike_lin_opt_problem(new_prob)  # generate a new instance of the class
-        return new_problem
+        self.name_list.append(("problem_(%d)", len(self.prob_list)))
+        self.prob_list.append(new_prob)
 
 
 
 #The method generate_random_prob_mult generates a given number N of random new problems
-#by adding a gaussian noise to each variable of the RHS (= right hand side) of the optimization problem.
+#from an instance of lin_opt_pbs.
 
 # Arguments taken: number of problems to be generated (type: int)
-# Output: list of the generated problems (list of instances of the class problem)
+# Output: None (the new generated problems have been added to self.prob_list)
 
     def generate_random_prob_mult(self, N):
-        new_list = []
+        K = len(self.prob_list)
         for i in range(N):
-            new_prob = self.generate_random_prob()
-            new_prob.name = self.name + "new_(%d)", i
-            new_list.append(new_prob)
-        return(new_list)
+            ind = np.random.randint(K)
+            self.generate_random_prob(ind)
  
 
 #The method extract_RHS extracts some chosen coefficients from the RHS
-#of instances of RTElike_lin_opt_problem given in a list
+#of instances of lin_opt_pbs given in a list
 #and returns them in a list
 #The chosen coefficients are given by self.non_fixed_vars
 
-# Arguments taken: a list of RTElike_lin_opt_problem instances
+# Arguments taken: a lin_opt_pbs instance
 # Output: a list of truncated RHS (i.e. a list of list)
         
-    def extract_RHS(self, list_of_RTElike_lin_opt_problem):
+    def extract_RHS(self):
         new_list = []
-        nb_pb = len(list_of_RTElike_lin_opt_problem)
-        for pb in range(nb_pb):
-            constraints = (list_of_RTElike_lin_opt_problem[pb]).prob.linear_constraints.get_rhs()
+        nb_pb = len(self.prob_list)
+        for i in range(nb_pb):
+            pb = self.prob_list[i]
+            constraints = pb.linear_constraints.get_rhs()
             truncated_constraints = []
             for coeff in self.non_fixed_vars:
                 truncated_constraints.append(constraints[coeff])
@@ -124,46 +155,50 @@ class RTElike_lin_opt_problem:
         return(new_list)
     
 #The method calculate_solutions determines the exact solutions
-#of instances of RTElike_lin_opt_problem given in a list
+#of the problems in an instance of lin_opt_pbs
 #and returns them in a list
 
-# Arguments taken: a list of RTElike_lin_opt_problem instances
+# Arguments taken: a lin_opt_pbs instance
 # Output: a list of solutions (float list)
     
     
-    def calculate_solutions(self, list_of_RTElike_lin_opt_problem):
+    def calculate_solutions(self):
         new_list = []
-        nb_pb = len(list_of_RTElike_lin_opt_problem)
+        nb_pb = len(self.prob_list)
         for pb in range(nb_pb):
-            (list_of_RTElike_lin_opt_problem[pb]).prob.solve()
-            new_list.append((list_of_RTElike_lin_opt_problem[pb]).prob.solution.get_objective_value())
+            (self.prob_list[pb]).solve()
+            new_list.append((self.prob_list[pb]).solution.get_objective_value())
         return(new_list)
 
 
-#The function problem_generator generates N random RHS based on a chosen linear optimization problem
+#The function problem_generator generates an instance of dataset
+#with N random RHS based on a chosen linear optimization problem
 #and their N associated solutions
 #The RHS are truncated : only the non fixed coefficients are kept
 
 #Parameters of problem generator :
-#           problem : a string giving the name of the linear optimization problem
-#               OR a cplex.Cplex linear optimization problem
+#           problems : a string list giving the names of the linear optimization problems
+#               OR a list of cplex.Cplex linear optimization problems
 #           N : an int giving the number of RHS to generate
 #           dev : a float setting the relative deviation of the variables when generating new problems
 #           non_fixed_vars : a list containing all variables which will be affected by the noise
-#               when generating new problems
-# Output:  RHS_list : a list of truncated RHS
-#          sol_list : a list of solutions
+#               when generating new problems. If not given, calculated by the programm.
+# Output:  a dataset instance containing N RHS and their N associated solutions
 
-def problem_generator(problem, N, dev, non_fixed_vars):
-    prob_root = RTElike_lin_opt_problem(problem)
+def problem_generator(problems, N, dev, non_fixed_vars = None):
+    prob_root = lin_opt_pbs(problems, non_fixed_vars)
     prob_root.set_deviation(dev)
-    prob_root.set_non_fixed_vars(non_fixed_vars)
-    prob_list = prob_root.generate_random_prob_mult(N)
-    RHS_list = prob_root.extract_RHS(prob_list)
-    sol_list = prob_root.calculate_solutions(prob_list)
-    return (RHS_list, sol_list)
+    prob_root.generate_random_prob_mult(N)
+    RHS_list = prob_root.extract_RHS()
+    sol_list = prob_root.calculate_solutions()
+    data = dataset.dataset()
+    data.RHS = RHS_list
+    data.solutions = sol_list
+    return data
     
 
 
 #Testing the methods defined above
-#print(problem_generator('petit_probleme.lp', 5, 0.01, [23, 24, 25]))
+#data = problem_generator(['petit_probleme.lp'], 5, 0.01, [23, 24, 25])
+#print(data.get_RHS())
+#print(data.get_solutions())
