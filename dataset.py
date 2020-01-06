@@ -15,8 +15,8 @@ class dataset:
 # solutions[i] is expected to be the solution of the linear optimisation problem with RHS[i]
     
     def init(self, RHS, solutions):
-        self.RHS = RHS
-        self.solutions = solutions
+        self.RHS = np.array(RHS)
+        self.solutions = np.array(solutions)
     
     def get_solutions(self):
         """returns the solutions"""
