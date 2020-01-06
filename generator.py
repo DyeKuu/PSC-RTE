@@ -127,7 +127,7 @@ class lin_opt_pbs:
 # Arguments taken: number of problems to be generated (type: int)
 # Output: None (the new generated problems have been added to self.prob_list)
 
-    def generate_random_prob_mult(self, N):
+    def generate_random_prob_mult(self, N): # Warning : random choice (by EtiMag)
         K = len(self.prob_list)
         for i in range(N):
             ind = np.random.randint(K)
@@ -140,7 +140,7 @@ class lin_opt_pbs:
 #The chosen coefficients are given by self.non_fixed_vars
 
 # Arguments taken: a lin_opt_pbs instance
-# Output: a list of truncated RHS (i.e. a list of list)
+# Output: a list of truncated RHS (i.e. a list of list) 
         
     def extract_RHS(self):
         new_list = []
@@ -191,9 +191,9 @@ def problem_generator(problems, N, dev, non_fixed_vars = None):
     prob_root.generate_random_prob_mult(N)
     RHS_list = prob_root.extract_RHS()
     sol_list = prob_root.calculate_solutions()
-    data = dataset.dataset()
-    data.RHS = RHS_list
-    data.solutions = sol_list
+    data = dataset.dataset() # rewrite to initialise the dataset instance
+    data.RHS = RHS_list # rewrite
+    data.solutions = sol_list # rewrite
     return data
     
 
