@@ -191,9 +191,7 @@ def problem_generator(problems, N, dev, non_fixed_vars = None):
     prob_root.generate_random_prob_mult(N)
     RHS_list = prob_root.extract_RHS()
     sol_list = prob_root.calculate_solutions()
-    data = dataset.dataset() # rewrite to initialise the dataset instance
-    data.RHS = RHS_list # rewrite
-    data.solutions = sol_list # rewrite
+    data = dataset.dataset(RHS_list, sol_list)
     return data
     
 
