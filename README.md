@@ -1,5 +1,31 @@
 # PSC-RTE
 
+generator -> (generates) -> instance of dataset -> (is given to) -> instance of nn -> (generates) -> instance of to_analyze
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 We put the "Bilan Réunion" and other discussions in the "Issues".
 
 The file Cplex_solving_in_txt.ipynb uses CPLEX to resolve all the problems and give total execution time. The solutions are written in txt files.
