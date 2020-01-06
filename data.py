@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from NeuralNetwork import nn
 
 
-class second_members:# contains a set of second members
+class RHS:# contains a set of second members
     def __init__(self, data):#data can be a file name or an istance of np.array with the solutions
         if isinstance(data, str): # if data is a string
             self.file_name = data # then we get the data in the file
