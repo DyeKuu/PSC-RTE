@@ -14,12 +14,10 @@ from NeuralNetwork import nn
 
 class RHS:# contains a set of second members
     def __init__(self, data):#data can be a file name or an istance of np.array with the solutions
-        if isinstance(data, str): # if data is a string
-            self.file_name = data # then we get the data in the file
-            self.content = np.vstack(np.array(pd.DataFrame(pd.read_pickle(self.file_name))[0]))
         if isinstance(data, np.matrix) or isinstance(data, np.array): #if it's a matrix
             self.content = data # then we get it
-            self.file_name = None
+        if isinstance(data, list):
+            self.content = np.array(data)
 
     def normalize_standard(self):
         scaler = StandardScaler()
@@ -53,13 +51,9 @@ class RHS:# contains a set of second members
 
 class solutions:
     def __init__(self, data):
-        """data can be a file name or an istance of np.array with the solutions"""
-        if isinstance(data, str):# if data is a string
-            self.file_name = data# then we get the data in the file
-            self.content = np.vstack(np.array(pd.DataFrame(pd.read_pickle(self.file_name))[0]))
+        """data can be a list or an istance of np.array with the solutions"""
         if isinstance(data, np.array) or isinstance(data, list):# if data is a vector
-            self.content = np.array(data)# then we get its values
-            self.file_name = None
+            self.content = np.array(data)# then we get its value
     def size(self):
         """number of solutions"""
         return self.content.size
