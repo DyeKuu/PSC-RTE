@@ -1,10 +1,9 @@
-# PSC-RTE
-
 generator -> (generates) -> instance of dataset -> (is given to) -> instance of nn -> (generates) -> instance of to_analyze
 
 
 
 
+# PSC-RTE
 
 
 
