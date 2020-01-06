@@ -4,7 +4,7 @@
 
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-
+from data.py import RHS, solutions
 
 class dataset:
     
@@ -14,9 +14,9 @@ class dataset:
 #           solutions : a list of solutions
 # solutions[i] is expected to be the solution of the linear optimisation problem with RHS[i]
     
-    def init(self, RHS, solutions):
-        self.RHS = np.array(RHS)
-        self.solutions = np.array(solutions)
+    def init(self, RHS_list, solutions_list):
+        self.RHS = RHS(RHS_list) #class RHS
+        self.solutions = solutions(solutions_list) # class solutions
     
     def get_solutions(self):
         """returns the solutions"""
@@ -44,4 +44,3 @@ class dataset:
         scaler = StandardScaler()
         self.RHS = scaler.fit_transform(self.RHS)
  
-
