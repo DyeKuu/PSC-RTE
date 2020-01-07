@@ -12,7 +12,7 @@
 
 import cplex
 import numpy as np
-import dataset
+from package_name.dataset import dataset
 
 #lin_opt_pbs is a class representing linear optimization problems.
 #It will be used to generate new linear optimization problems 
@@ -191,7 +191,7 @@ def problem_generator(problems, N, dev, non_fixed_vars = None):
     prob_root.generate_random_prob_mult(N)
     RHS_list = prob_root.extract_RHS()
     sol_list = prob_root.calculate_solutions()
-    data = dataset.dataset(RHS_list, sol_list)
+    data = dataset(RHS_list, sol_list)
     return data
     
 

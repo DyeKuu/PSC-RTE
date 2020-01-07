@@ -21,6 +21,7 @@ class to_analyze:
         self.solutions = solutions
         self.predictions = predictions
         self.hoped_precision = 1.e-6
+        self.size = len(self.solutions)
         assert len(self.predictions) == len(self.solutions)
     def add_learning_history(self, history):
         self.history = history
@@ -29,7 +30,8 @@ class to_analyze:
         for i in range(len(self.solutions)):
             if abs((self.predictions[i] - self.solutions[i])/self.solutions[i]) > self.hoped_precision:
                 number_over_precision += 1
-        return number_over_precision/len(self.solutions)
+        print("proportion of predictions over relative precision ", self.hoped_precision, " is ", number_over_precision/self.size)
+        return number_over_precision/self.size
     def precision_histogram(self):
         precision_array = np.empty_like(self.solutions)
         for i in range(len(self.solutions)):
