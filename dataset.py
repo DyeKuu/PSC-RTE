@@ -4,7 +4,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from NeuralNetwork import nn
+import pickle
+from package_name.NeuralNetwork import nn
 
 from sklearn.preprocessing import StandardScaler
 
@@ -14,6 +15,8 @@ class RHS:# contains a set of second members
             self.content = data # then we get it
         if isinstance(data, list):
             self.content = np.array(data)
+        else:
+            raise Exception("Could not initialise the RHS instance. The data must be list or array.")
 
     def normalize_standard(self):
         scaler = StandardScaler()
@@ -46,9 +49,11 @@ class RHS:# contains a set of second members
 
 class solutions:
     def __init__(self, data):
-        """data can be a list or an istance of np.array with the solutions"""
+        """data can be a list or an instance of np.array with the solutions"""
         if isinstance(data, np.array) or isinstance(data, list):# if data is a vector
             self.content = np.array(data)# then we get its value
+        else:
+            raise Exception("could not initialize the solution instance. The data must be list or array")
     def size(self):
         """number of solutions"""
         return self.content.size
@@ -75,9 +80,14 @@ class dataset:
 #           solutions : an instance of solutions
 # to modify dataset, use the methods from RHS and solutions
     
-    def init(self, RHS_list, solutions_list):
-        self.RHS = RHS(RHS_list) #class RHS
-        self.solutions = solutions(solutions_list) # class solutions
+    def __init__(self, RHS_list, solutions_list = None):
+        if isinstance(RHS_list, str) and solutions_list == None: # if RHS_list is a file name
+            set = pickle.load(open(RHS_list, "rb")) #then we get the content of the file
+            self.RHS = RHS(set[0])
+            self.solutions = solutions(set[1])
+        else: # if it is data, then we directly initialize the fields
+            self.RHS = RHS(RHS_list) #class RHS
+            self.solutions = solutions(solutions_list) # class solutions
     
     def get_solutions(self):
         """returns the solutions as an array"""
@@ -86,4 +96,7 @@ class dataset:
     def get_RHS(self):
         """returns the solutions as an array"""
         return self.RHS.get_RHS()
-
+    def dump_in_file(self, file_name): # puts the content in a pickle file (we get it back with __init__)
+        import pickle
+        set = (self.RHS.get_RHS(), self.solutions.get_solutions())
+        pickle.dump(set, open("file_name", "wb"))
