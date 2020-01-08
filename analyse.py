@@ -22,6 +22,7 @@ class to_analyze:
         self.predictions = predictions
         self.hoped_precision = 1.e-6
         self.size = len(self.solutions)
+        self.history = None
         assert len(self.predictions) == len(self.solutions)
     def add_learning_history(self, history):
         self.history = history
