@@ -62,3 +62,6 @@ class nn:
         object_to_analyze =  to_analyze(dataset_instance.get_solutions, self.predict(dataset_instance))
         object_to_analyze.add_learning_history(history)
         return object_to_analyze
+    
+    def save_model(self, name):
+        self.model.save(str(name) + ".h5")
