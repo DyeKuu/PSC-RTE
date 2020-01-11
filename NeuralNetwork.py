@@ -9,9 +9,9 @@ from bokeh.layouts import row, column
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from dataset import dataset
+from package_name.dataset import dataset
 
-from divers.analyse import to_analyze
+from package_name.analyse import to_analyze
 
 # This class implements a neural network. The neural_network is trained and tested with an instance of dataset
 # This class allows to modify the neural network
@@ -24,7 +24,7 @@ class nn:
         self.optimizer = "sgd"
         self.metrics = ["mean_squared_error"]
         self.is_compiled = False # says if self.model already has been compiled with the layers, optmizer, loss and metrics
-        
+        self.file_name = None
         
     def basic_nn(self, list_n_neurons):
         """Initialises the network with layers whose numbers of neurons are given in the argument"""
@@ -62,6 +62,7 @@ class nn:
         history =  self.model.evaluate(dataset_instance.get_RHS(), dataset_instance.get_solutions())
         object_to_analyze = to_analyze(dataset_instance.get_solutions, self.predict(dataset_instance))
         object_to_analyze.add_learning_history(history)
+        object_to_analyze.add_used_nn(self)
         return object_to_analyze
     
     def predict(self, dataset_instance):
@@ -75,7 +76,14 @@ class nn:
         history = self.fit(dataset_instance.get_RHS, dataset_instance.get_solutions(), epochs, validation_split)
         object_to_analyze =  to_analyze(dataset_instance.get_solutions, self.predict(dataset_instance))
         object_to_analyze.add_learning_history(history)
+        object_to_analyze.add_used_nn(self)
         return object_to_analyze
     
-    def save_model(self, name):
+    def save_model(self, name = None):
+        """ Saes the model with the given name. If no name is given, the previous name is used"""
+        if name == None: #If we don't give a name, then teh previous name is used
+            assert self.file_name != None, "No name :("
+            name = self.file_name
+        else:
+            self.file_name = name # if we give a name, then it is stored
         self.model.save(str(name) + ".h5")

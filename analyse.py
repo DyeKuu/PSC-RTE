@@ -23,9 +23,12 @@ class to_analyze:
         self.hoped_precision = 1.e-6
         self.size = len(self.solutions)
         self.history = None
+        self.used_nn = None
         assert len(self.predictions) == len(self.solutions)
     def add_learning_history(self, history):
         self.history = history
+    def add_used_nn(self, neural_network):
+        self.used_nn = neural_network
     def rate_over_precision(self):
         number_over_precision = 0
         for i in range(len(self.solutions)):
@@ -45,6 +48,8 @@ class to_analyze:
         plt.legend()
     def mean_squared_error(self):
         return abs(self.predictions-self.solutions)
+    def mean_precision_error(self):
+        return np.mean(np.absolute((self.predictions - self.solutions)/self.solutions))
 
 
 

@@ -88,11 +88,13 @@ class dataset:
         else: # if it is data, then we directly initialize the fields
             self.RHS = RHS(RHS_list) #class RHS
             self.solutions = solutions(solutions_list) # class solutions
-    
+        s1, s2 = self.solutions.size(), self.RHS.size()
+        assert s1 == s2, "RHS and solutions do not have the same size"
     def get_solutions(self):
         """returns the solutions as an array"""
         return self.solutions.get_solutions()
-
+    def size(self):
+        return self.RHS.size()
     def get_RHS(self):
         """returns the solutions as an array"""
         return self.RHS.get_RHS()
@@ -100,3 +102,34 @@ class dataset:
         import pickle
         set = (self.RHS.get_RHS(), self.solutions.get_solutions())
         pickle.dump(set, open("file_name", "wb"))
+    def cut(self, proportion_to_cut):
+        """cuts a random part of the dataset and returns a new dataset. The cut data is deleted from the first dataset"""
+        size = self.size()
+        number_to_cut = int(proportion_to_cut*size)
+        index_to_cut = np.random.choice(size, number_to_cut, replace=False) # We randomly generate the indexes to cut
+        list_to_cut_bool = size*[False]
+        for index in index_to_cut:
+            list_to_cut_bool[index] = True # list_to_cut_bool[i] is True if line i must be cut
+        RHS_to_keep, solutions_to_keep = [], []
+        RHS_to_cut, solutions_to_cut = [], []
+        initial_RHS_array = self.get_RHS()
+        initial_solutions_array = self.get_solutions()
+        for i in range(size):
+            if list_to_cut_bool[i]:# if we cut the line i
+                RHS_to_cut.append(initial_RHS_array[i])
+                solutions_to_cut.append(initial_solutions_array[i])
+            else:
+                RHS_to_keep.append(initial_RHS_array[i])
+                solutions_to_keep.append(initial_solutions_array[i])
+        self.__init__(RHS_to_keep, solutions_to_keep)
+        return dataset(RHS_to_cut, solutions_to_cut)
+    def merge(self, other_dataset):
+        """Merges the second dataset in the fist dataset. The second dataset is not modified."""
+        assert isinstance(other_dataset, dataset), "It must be an instance of dataset"
+        assert len(other_dataset[0]) == len(dataset[0]), "Coordinates do not have the same size :'("
+        new_RHS_array = np.concatenate((self.get_RHS(), other_dataset.get_RHS()), axis=0)
+        new_solutions_array = np.concatenate((self.get_solutions(), other_dataset.get_solutions()), axis=0)
+        self.__init__(new_RHS_array, new_solutions_array)
+
+
+
