@@ -1,17 +1,8 @@
 import tensorflow as tf
-import pandas as pd
-import numpy as np
-import scipy as sc
-import matplotlib.pyplot as plt
-from bokeh.io import show, output_notebook
-from bokeh.plotting import figure
-from bokeh.layouts import row, column
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from package_name.dataset import dataset
 
 from package_name.analyse import to_analyze
+from package_name.dataset import dataset
+
 
 # This class implements a neural network. The neural_network is trained and tested with an instance of dataset
 # This class allows to modify the neural network

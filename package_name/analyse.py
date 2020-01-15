@@ -1,16 +1,5 @@
-import tensorflow as tf
-import pandas as pd
 import numpy as np
-import scipy as sc
 import matplotlib.pyplot as plt
-from bokeh.io import show, output_notebook
-from bokeh.plotting import figure
-from bokeh.layouts import row, column
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-
-from NeuralNetwork import nn
-from dataset import dataset
 
 # This class is created by an instance of nn
 # It is used to analyze the nn object performance on the dataset
