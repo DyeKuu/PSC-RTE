@@ -5,15 +5,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-from package_name.NeuralNetwork import nn
+import NeuralNetwork
 
 from sklearn.preprocessing import StandardScaler
 
 class RHS:# contains a set of second members
     def __init__(self, data):#data can be a file name or an istance of np.array with the solutions
-        if isinstance(data, np.matrix) or isinstance(data, np.array): #if it's a matrix
+        if isinstance(data, np.matrix) or isinstance(data, np.ndarray): #if it's a matrix
             self.content = data # then we get it
-        if isinstance(data, list):
+        elif isinstance(data, list):
             self.content = np.array(data)
         else:
             raise Exception("Could not initialise the RHS instance. The data must be list or array.")
@@ -43,20 +43,20 @@ class RHS:# contains a set of second members
         plt.boxplot(self.range(), whis=[2.5,97.5])
     def size(self):
         """number of second members"""
-        return self.content.size
+        return len(self.content)
     def get_RHS(self):
         return self.content
 
 class solutions:
     def __init__(self, data):
         """data can be a list or an instance of np.array with the solutions"""
-        if isinstance(data, np.array) or isinstance(data, list):# if data is a vector
+        if isinstance(data, np.ndarray) or isinstance(data, list):# if data is a vector
             self.content = np.array(data)# then we get its value
         else:
             raise Exception("could not initialize the solution instance. The data must be list or array")
     def size(self):
         """number of solutions"""
-        return self.content.size
+        return len(self.content)
     def mean(self):
         """mean value of the solutions"""
         return np.mean(self.content)
@@ -101,7 +101,7 @@ class dataset:
     def dump_in_file(self, file_name): # puts the content in a pickle file (we get it back with __init__)
         import pickle
         set = (self.RHS.get_RHS(), self.solutions.get_solutions())
-        pickle.dump(set, open("file_name", "wb"))
+        pickle.dump(set, open(file_name, "wb"))
     def cut(self, proportion_to_cut):
         """cuts a random part of the dataset and returns a new dataset. The cut data is deleted from the first dataset"""
         size = self.size()
