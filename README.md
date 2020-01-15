@@ -37,6 +37,8 @@ generator -> (generates) -> instance of dataset -> (is given to) -> instance of 
 # 2. Right click in folder : Open in Pycharm as Project
 # 3. Run the file example.py
 
+## And you will find bugs :) Help with me, we can solve it together.
+
 
 
 
