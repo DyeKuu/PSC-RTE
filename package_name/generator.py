@@ -188,6 +188,28 @@ def problem_generator(problems, N, dev, non_fixed_vars=None):
     return data
 
 
+# The function small_problem_generator generates an instance of dataset
+# with N random RHS with m non fixed coefficients chooed randomly based on a chosen linear optimization problem
+# and their N associated solutions
+# The RHS are truncated : only the non fixed coefficients are kept
+
+# Parameters of problem generator :
+#           problems : a string list giving the names of the linear optimization problems
+#               OR a list of cplex.Cplex linear optimization problems
+#           N : an int giving the number of RHS to generate
+#           m : number of non fixed variables
+#           dev : a float setting the relative deviation of the variables when generating new problems
+# Output:  a dataset instance containing N RHS and their N associated solutions
+
+def small_problem_generator(problem, N, m, dev):
+    import random
+    prob_root = lin_opt_pbs(problem)
+    rhs= prob_root.prob_list[0].linear_constraints.get_rhs()
+    non_fixed_rhs = random.sample(range(1,len(rhs)),m)
+    prob_root.non_fixed_vars = non_fixed_rhs
+    return problem_generator(problem, N, dev, non_fixed_rhs)
+
+
 # Testing the methods defined above
 # data = (problem_generator['petit_probleme.lp'], 10, 0.1, [23, 24, 25])
 # print(data.get_RHS())
