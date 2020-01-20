@@ -1,7 +1,7 @@
 import tensorflow as tf
 from package_name.analyse import to_analyze
 from package_name.dataset import dataset
-
+import numpy as np
 
 # This class implements a neural network. The neural_network is trained and tested with an instance of dataset
 # This class allows to modify the neural network
@@ -45,7 +45,7 @@ class nn:
         self.metrics = [metrics_name]
 
     def fit(self, pb_train, sol_train, epochs, validation_split):
-        return self.model.fit(pb_train, sol_train, epochs, validation_split)
+        return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split)
 
     def evaluate(self, dataset_instance):
         """ Evaluates the network with the dataset. Arguments : class dataset Out : class to_analyze"""
@@ -59,7 +59,7 @@ class nn:
         assert self.is_compiled
         return self.model.predict(dataset_instance.get_RHS())
 
-    def train_with(self, dataset_instance, epochs, validation_split=0):
+    def train_with(self, dataset_instance, epochs, validation_split):
         """ Trains the network using the dataset. Arguments : class dataset Out : class to_analyze"""
         self.compile()
         assert isinstance(dataset_instance, dataset)

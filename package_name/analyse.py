@@ -41,6 +41,7 @@ class to_analyze:
         plt.ylabel("density")
         plt.title("proportion over precision = " + str(self.rate_over_precision()))
         plt.legend()
+        # plt.show()
 
     def mean_squared_error(self):
         return abs(self.predictions - self.solutions)

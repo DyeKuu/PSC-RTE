@@ -189,11 +189,11 @@ def problem_generator(problems, N, dev, non_fixed_vars=None):
 
 
 # Testing the methods defined above
-data = problem_generator(['petit_probleme.lp'], 10, 0.01, [23, 24, 25])
-print(data.get_RHS())
-print(data.get_solutions())
-data.dump_in_file("essai")
-
-new_dataset = dataset.dataset("essai")
-print("resultat")
-print(new_dataset.get_RHS())
+# data = (problem_generator['petit_probleme.lp'], 10, 0.1, [23, 24, 25])
+# print(data.get_RHS())
+# print(data.get_solutions())
+# data.dump_in_file("essai")
+#
+# new_dataset = dataset.dataset("essai")
+# print("resultat")
+# print(new_dataset.get_RHS())

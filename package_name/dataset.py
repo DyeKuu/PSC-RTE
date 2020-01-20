@@ -70,6 +70,14 @@ class solutions:
         """mean value of the solutions"""
         return np.mean(self.content)
 
+    def normalize_standard(self):
+        scaler = StandardScaler()
+        self.content = scaler.fit_transform(self.content.reshape(-1, 1))
+
+    def toSigmoid(self):
+        from scipy.stats import logistic
+        self.content= logistic.cdf(self.content)
+
     def apply(self, f):
         """f is the function applied to every solution"""
         for i in range(self.size()):
