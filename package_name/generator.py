@@ -206,6 +206,7 @@ def small_problem_generator(problem, N, m, dev):
     prob_root = lin_opt_pbs(problem)
     rhs= prob_root.prob_list[0].linear_constraints.get_rhs()
     non_fixed_rhs = random.sample(range(1,len(rhs)),m)
+    # print(non_fixed_rhs)
     prob_root.non_fixed_vars = non_fixed_rhs
     return problem_generator(problem, N, dev, non_fixed_rhs)
 
