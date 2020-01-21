@@ -35,7 +35,7 @@ class to_analyze:
         precision_array = np.empty_like(self.solutions)
         for i in range(len(self.solutions)):
             precision_array[i] = abs((self.predictions[i] - self.solutions[i]) / self.solutions[i])
-        plt.hist(precision_array, density=True, bins=50)
+        plt.hist(precision_array, bins=1)
         plt.axvline(self.hoped_precision, label="hoped precision = " + str(self.hoped_precision))
         plt.xlabel("precision")
         plt.ylabel("density")

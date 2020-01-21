@@ -49,22 +49,26 @@ class nn:
 
     def evaluate(self, dataset_instance):
         """ Evaluates the network with the dataset. Arguments : class dataset Out : class to_analyze"""
+        raise(Exception("modify this method, predict is different"))
         history = self.model.evaluate(dataset_instance.get_RHS(), dataset_instance.get_solutions())
-        object_to_analyze = to_analyze(dataset_instance.get_solutions, self.predict(dataset_instance))
+        object_to_analyze = to_analyze(dataset_instance.get_solutions(), self.model.predict(dataset_instance.get_RHS()))
         object_to_analyze.add_learning_history(history)
         object_to_analyze.add_used_nn(self)
         return object_to_analyze
 
     def predict(self, dataset_instance):
-        assert self.is_compiled
-        return self.model.predict(dataset_instance.get_RHS())
+        self.compile()
+        print(type(self.model.predict(dataset_instance.get_RHS())))
+        object_to_analyze = to_analyze(dataset_instance.get_solutions(), self.model.predict(dataset_instance.get_RHS()))
+        object_to_analyze.add_used_nn(self)
+        return object_to_analyze
 
     def train_with(self, dataset_instance, epochs, validation_split):
         """ Trains the network using the dataset. Arguments : class dataset Out : class to_analyze"""
         self.compile()
         assert isinstance(dataset_instance, dataset)
         history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs, validation_split)
-        object_to_analyze = to_analyze(dataset_instance.get_solutions(), self.predict(dataset_instance))
+        object_to_analyze = to_analyze(dataset_instance.get_solutions(), self.model.predict(dataset_instance.get_RHS()))
         object_to_analyze.add_learning_history(history)
         object_to_analyze.add_used_nn(self)
         return object_to_analyze
