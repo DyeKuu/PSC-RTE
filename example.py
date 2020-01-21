@@ -6,13 +6,9 @@ problem, N, dev, List = ["petit_probleme.lp"], 100, 1, [1, 2, 3, 4, 5, 6, 7, 8, 
 problem_set = problem_generator(problem, N, dev, non_fixed_vars=List)  # class dataset
 ### Modifying the data before training
 problem_set.RHS.normalize_standard()
-# problem_set.solutions.normalize_standard()
-# problem_set.solutions.toSigmoid()
 problem_set.solutions.box()  # Boxplot of the solutions
 ### Creating th Neural Network
-layers_list = [10,10]
-epochs = 10
-neural_network = nn()
+layers_list, epochs, neural_network = [10,10], 10, nn()
 neural_network.basic_nn(layers_list)  # neural_network is now an instance of nn with the layers [Dense(100, relu), Dense(100, relu), Dense(1,  sigmoid)]
 
 ### training the neural network
