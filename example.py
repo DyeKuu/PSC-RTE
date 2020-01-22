@@ -7,6 +7,7 @@ problem_set = problem_generator(problem, N, dev, non_fixed_vars=List)
 ### Modifying the data before training
 problem_set.RHS.normalize_standard()
 problem_set.solutions.normalize_standard()
+problem_set.solutions.toSigmoid()
 ### Creating th Neural Network
 layers_list, epochs, neural_network = [10,10], 20, nn()
 neural_network.basic_nn(layers_list)
