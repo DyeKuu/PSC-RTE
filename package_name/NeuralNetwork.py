@@ -58,7 +58,6 @@ class nn:
 
     def predict(self, dataset_instance):
         self.compile()
-        print(type(self.model.predict(dataset_instance.get_RHS())))
         object_to_analyze = to_analyze(dataset_instance.get_solutions(), self.model.predict(dataset_instance.get_RHS()))
         object_to_analyze.add_used_nn(self)
         return object_to_analyze

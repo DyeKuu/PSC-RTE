@@ -27,20 +27,22 @@ class to_analyze:
         for i in range(len(self.solutions)):
             if abs((self.predictions[i] - self.solutions[i]) / self.solutions[i]) > self.hoped_precision:
                 number_over_precision += 1
-        print("proportion of predictions over relative precision ", self.hoped_precision, " is ",
-              number_over_precision / self.size)
+ #       print("The proportion of predictions over relative precision ", self.hoped_precision, " is ",
+ #             number_over_precision / self.size)
         return number_over_precision / self.size
 
     def precision_histogram(self):
         precision_array = np.empty_like(self.solutions)
         for i in range(len(self.solutions)):
             precision_array[i] = abs((self.predictions[i] - self.solutions[i]) / self.solutions[i])
-        plt.hist(precision_array, bins=1)
+        plt.axis([0, 2, 0, 200])
+        histogramme = plt.hist(precision_array, bins=50, range=(0,2))
         plt.axvline(self.hoped_precision, label="hoped precision = " + str(self.hoped_precision))
-        plt.xlabel("precision")
+        plt.xlabel("relative precision")
         plt.ylabel("density")
-        plt.title("proportion over precision = " + str(self.rate_over_precision()))
+        plt.title("The proportion of predictions over relative precision " + str(self.hoped_precision) + " is " + str(self.rate_over_precision()))
         plt.legend()
+        return histogramme
         # plt.show()
 
     def mean_squared_error(self):
