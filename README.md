@@ -17,3 +17,4 @@ data.py and NeuralNetwork.py contain basic classes and methods for both datasets
 
 We put the "Bilan Réunion" and other discussions in the "Issues".
 
+Site for hyperas https://github.com/maxpumperla/hyperas
