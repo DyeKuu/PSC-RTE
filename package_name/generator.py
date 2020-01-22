@@ -201,7 +201,7 @@ def problem_generator(problems, N, dev, non_fixed_vars=None):
 #           dev : a float setting the relative deviation of the variables when generating new problems
 # Output:  a dataset instance containing N RHS and their N associated solutions
 
-def small_problem_generator(problem, N, m, dev):
+def random_problem_generator(problem, N, m, dev):
     import random
     prob_root = lin_opt_pbs(problem)
     rhs= prob_root.prob_list[0].linear_constraints.get_rhs()
