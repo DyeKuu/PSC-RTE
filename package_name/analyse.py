@@ -21,7 +21,10 @@ class to_analyze:
 
     def add_used_nn(self, neural_network):
         self.used_nn = neural_network
-
+    def untransform_predictions_linear(self, initial_a, initial_b):
+        a = 1/initial_a
+        b = -initial_b/initial_a
+        self.predictions = a*self.predictions + b
     def rate_over_precision(self):
         number_over_precision = 0
         for i in range(len(self.solutions)):
@@ -50,3 +53,7 @@ class to_analyze:
 
     def mean_precision_error(self):
         return np.mean(np.absolute((self.predictions - self.solutions) / self.solutions))
+    def get_solutions(self):
+        return self.solutions
+    def get_predictions(self):
+        return self.predictions

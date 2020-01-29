@@ -158,3 +158,6 @@ class dataset:
         new_RHS_array = np.concatenate((self.get_RHS(), other_dataset.get_RHS()), axis=0)
         new_solutions_array = np.concatenate((self.get_solutions(), other_dataset.get_solutions()), axis=0)
         self.__init__(new_RHS_array, new_solutions_array)
+
+    def copy(self):
+        return dataset(np.copy(self.get_RHS()), np.copy(self.get_solutions()))
