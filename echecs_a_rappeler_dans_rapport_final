@@ -1,0 +1,13 @@
+- Gestion de la normalisation : au début du projet les courbes d'évaluation se faisaient sur les solutions/prédictions normalisées,
+pas sur les résultats véritablement attendus. Corrigé fin janvier.
+
+- Hyperas : 2 semaines de prise en main en janvier pour finalement conclure que le package est trop artisanal, beugué et
+pas pratique...
+
+- Saturation mémoire à cause de création simultanée de trop d'objets CPLEX : corrigé dans le generator qui ne fait plus que mettre à
+jour les RHS sur un unique objet. Gros gain de mémoire qui ne sature plus + gros gain de temps (sur premiers essais, on divise d'un
+facteur 5).
+
+- Gestion des pointeurs sur copie de certains champs dans le generator. Mauvaise gestion des pointeurs --> en modifiant 
+l'objet CPLEX créé pour génération des données, on modifiait aussi les exemples qui devaient servir à générer ! -->
+marche aléatoire...
