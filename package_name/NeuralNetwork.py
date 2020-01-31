@@ -62,7 +62,7 @@ class nn:
     def predict(self, dataset_instance):
         self.compile()
         object_to_analyze = to_analyze(dataset_instance.get_solutions(), self.model.predict(dataset_instance.get_RHS()))
-        for treatment in self.pre_treatment:
+        for treatment in self.pre_treatment[::-1]:
             if treatment[0] == "linear":
                 object_to_analyze.untransform_predictions_linear(treatment[1], treatment[2])
         object_to_analyze.add_used_nn(self)
@@ -78,14 +78,14 @@ class nn:
                 mean_value = np.mean(dataset_instance.get_solutions())
                 max_abs = np.max(np.absolute(dataset_instance.get_solutions()-mean_value))
                 a = 1/(self.factor*max_abs)
-                b = - mean_value/(self.factor*max_abs)
+                b = - mean_value/(self.factor*max_abs) + 0.5
                 treatment[1], treatment[2] = a,b # collecting the values a and b for pre processing x -> a*x + b
                 dataset_instance.solutions.apply_linear(a, b)
         history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs, validation_split) # training the network
         object_to_analyze = to_analyze(initial_dataset_instance.get_solutions(), self.model.predict(dataset_instance.get_RHS()))
         object_to_analyze.add_learning_history(history)
         object_to_analyze.add_used_nn(self)
-        for treatment in self.pre_treatment: ### post processing
+        for treatment in self.pre_treatment[::-1]: ### post processing
             if treatment[0] == "linear":
                 object_to_analyze.untransform_predictions_linear(treatment[1], treatment[2])
         return object_to_analyze
