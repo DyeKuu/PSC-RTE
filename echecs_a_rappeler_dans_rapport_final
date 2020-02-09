@@ -11,7 +11,3 @@ facteur 5).
 - Gestion des pointeurs sur copie de certains champs dans le generator. Mauvaise gestion des pointeurs --> en modifiant 
 l'objet CPLEX créé pour génération des données, on modifiait aussi les exemples qui devaient servir à générer ! -->
 marche aléatoire...
-
-
-- Début février : tout le code est en place. Le réseau ne donne pas de résultats satisfaisants (erreur relative 10^-4 avec
-optimisation manuelle).
