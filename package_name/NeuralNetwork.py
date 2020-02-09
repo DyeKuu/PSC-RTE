@@ -23,7 +23,7 @@ class nn:
         self.__init__()
         for nb_neurons in list_n_neurons:
             self.model.add(tf.keras.layers.Dense(nb_neurons, activation="relu"))
-        self.model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+        self.model.add(tf.keras.layers.Dense(1, activation="relu"))
         self.set_treatment_linear()
     def add_relu(self, nb_neurons):
         self.model.add(tf.keras.layers.Dense(nb_neurons, activation="relu"))
