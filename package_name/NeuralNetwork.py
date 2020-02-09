@@ -47,9 +47,11 @@ class nn:
 
     def fit(self, pb_train, sol_train, epochs, validation_split):
         return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split)
+    
     def set_treatment_linear(self):
         """trains with a linear transform for the solutions so that mean is 0.5 and the values are between 0 and 1. Chosing factor > 2 makes you put the values tighter around 0.5 """
         self.pre_treatment = [["linear",None, None]] # (name, a, b) for x -> a*x + b
+        
     def evaluate(self, dataset_instance):
         """ Evaluates the network with the dataset. Arguments : class dataset Out : class to_analyze"""
         raise(Exception("modify this method, predict is different"))

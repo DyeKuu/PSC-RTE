@@ -38,8 +38,8 @@ class to_analyze:
         precision_array = np.empty_like(self.solutions)
         for i in range(len(self.solutions)):
             precision_array[i] = abs((self.predictions[i] - self.solutions[i]) / self.solutions[i])
-        plt.axis([0, 2, 0, 200])
-        histogramme = plt.hist(precision_array, bins=50, range=(0,2))
+        plt.axis([0, 0.0003, 0, 200])
+        histogramme = plt.hist(precision_array, bins=50, range=(0,0.0003))
         plt.axvline(self.hoped_precision, label="hoped precision = " + str(self.hoped_precision))
         plt.xlabel("relative precision")
         plt.ylabel("density")

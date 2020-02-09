@@ -8,7 +8,7 @@
 
 import cplex
 import numpy as np
-import dataset
+from package_name.dataset import dataset
 
 
 # lin_opt_pbs is a class representing linear optimization problems.
@@ -110,6 +110,7 @@ class lin_opt_pbs:
             new_val = val + (np.random.normal(0, abs(val) * self.dev, 1))[0]  # add gaussian noise to the RHS
             new_list.append((indice, new_val))
         prob_to_modify.prob_list[0].linear_constraints.set_rhs(new_list)  # set the RHS to the bias RHS
+        
 
     # The method extract_RHS extracts some chosen coefficients from the RHS
     # of instances of lin_opt_pbs given in a list
@@ -178,17 +179,65 @@ def problem_generator(problems, N, dev, non_fixed_vars=None):
         prob_root.modify_random_prob(ind, prob_temp)
         rhs_list.extend(prob_temp.extract_RHS())
         sol_list.extend(prob_temp.calculate_solutions())
-    data = dataset.dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
+    data = dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
+    return data
+
+
+# The function problem_generator_with_steady_modification generates an instance of dataset
+# with N RHS based on a chosen linear optimization problem modified as follows :
+# one unique constraint C of the known problem is steadily modified
+# in the range (1-dev)C, (1+dev)C.
+# The RHS are truncated : only the non fixed coefficient is kept
+
+# WARNING : user MUST use this function with only ONE element in non_fixed_var
+
+# Parameters of problem generator :
+#           problems : a string list giving the names of the linear optimization problems
+#               OR a list of cplex.Cplex linear optimization problems
+#           N : an int giving the number of RHS to generate
+#           dev : a float setting the range of variation of the non_fixed_vars
+#           non_fixed_var : a list containing exactly one index.
+# Output:  a dataset instance containing N RHS and their N associated solutions
+
+
+def problem_generator_with_steady_modification_of_unique_constraint(problems, N, dev, non_fixed_var):
+    assert (len(non_fixed_var)==1)
+    prob_root = lin_opt_pbs(problems, non_fixed_var)
+    rhs = prob_root.prob_list[0].linear_constraints.get_rhs()
+    prob_root.set_deviation(dev)
+    prob_root.set_non_fixed_vars(non_fixed_var)
+    
+    prob_temp = lin_opt_pbs([cplex.Cplex()])
+    prob_temp.prob_list[0].read(prob_root.name_list[0])
+    prob_temp.set_deviation(dev)
+    prob_temp.set_non_fixed_vars(non_fixed_var)
+    
+    rhs_list = []
+    sol_list = []
+    
+    j = non_fixed_var[0]
+    
+    for i in range(N):
+        new_value = rhs[j]*(1-dev) + (i+1)*2*rhs[j]*dev/N
+        prob_temp.prob_list[0].linear_constraints.set_rhs([(j, new_value)])
+        rhs_list.append(new_value)
+        sol_list.extend(prob_temp.calculate_solutions())
+    
+    data = dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
     return data
 
 
 
-
 # Testing the methods defined above
-data = problem_generator(['petit_probleme.lp'], 300, 1, [23, 24, 25])
+data = problem_generator_with_steady_modification_of_unique_constraint(['petit_probleme.lp'], 5000, 30, [25])
 print(data.get_RHS())
 print(data.get_solutions())
-data.dump_in_file("essai")
+data.sol_fct_of_RHS()
+
+#data = problem_generator(['petit_probleme.lp'], 300, 1, [23, 24, 25])
+#print(data.get_RHS())
+#print(data.get_solutions())
+#data.dump_in_file("essai")
 
 #new_dataset = dataset.dataset("essai")
 #print("resultat")

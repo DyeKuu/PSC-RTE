@@ -161,3 +161,7 @@ class dataset:
 
     def copy(self):
         return dataset(np.copy(self.get_RHS()), np.copy(self.get_solutions()))
+    
+    def sol_fct_of_RHS(self):
+        plt.plot(self.get_RHS(), self.get_solutions())
+        plt.show()
