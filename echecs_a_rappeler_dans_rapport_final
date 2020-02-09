@@ -13,4 +13,5 @@ l'objet CPLEX créé pour génération des données, on modifiait aussi les exem
 marche aléatoire...
 
 
-- Début février : tout le code est en place. Le réseau ne donne pas de résultats satisfaisants (erreur relative 10^-4).
+- Début février : tout le code est en place. Le réseau ne donne pas de résultats satisfaisants (erreur relative 10^-4 avec
+optimisation manuelle).
