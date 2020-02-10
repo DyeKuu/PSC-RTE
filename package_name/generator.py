@@ -222,17 +222,18 @@ def problem_generator_with_steady_modification_of_unique_constraint(problems, N,
         prob_temp.prob_list[0].linear_constraints.set_rhs([(j, new_value)])
         rhs_list.append(new_value)
         sol_list.extend(prob_temp.calculate_solutions())
-    
+
+    rhs_list = np.array(rhs_list).reshape(-1,1)
     data = dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
     return data
 
 
 
 # Testing the methods defined above
-data = problem_generator_with_steady_modification_of_unique_constraint(['petit_probleme.lp'], 5000, 30, [25])
-print(data.get_RHS())
-print(data.get_solutions())
-data.sol_fct_of_RHS()
+# data = problem_generator_with_steady_modification_of_unique_constraint(['petit_probleme.lp'], 5000, 30, [25])
+# print(data.get_RHS())
+# print(data.get_solutions())
+# data.sol_fct_of_RHS()
 
 #data = problem_generator(['petit_probleme.lp'], 300, 1, [23, 24, 25])
 #print(data.get_RHS())
