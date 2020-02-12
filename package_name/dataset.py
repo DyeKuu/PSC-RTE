@@ -52,6 +52,10 @@ class RHS:  # contains a set of second members
 
     def get_RHS(self):
         return self.content
+    def add_const(self, number_of_const):
+        n = self.size()
+        const_matrix = np.ones((n, number_of_const))
+        self.__init__(np.hstack((self.get_RHS(), const_matrix)))
 
 
 class solutions:
@@ -161,7 +165,7 @@ class dataset:
 
     def copy(self):
         return dataset(np.copy(self.get_RHS()), np.copy(self.get_solutions()))
-    
+
     def sol_fct_of_RHS(self):
         plt.plot(self.get_RHS(), self.get_solutions())
         plt.show()
