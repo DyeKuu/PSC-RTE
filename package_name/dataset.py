@@ -169,3 +169,21 @@ class dataset:
     def sol_fct_of_RHS(self):
         plt.plot(self.get_RHS(), self.get_solutions())
         plt.show()
+        
+    def set_similar(self, size = None):
+    """sets all the RHS and solutions to make them similar to the first one"""
+        if size == None:
+            size = self.size()
+        first_RHS = self.get_RHS()[0]
+        first_solution = self.get_solutions()[0]
+        RHS_list = []
+        solutions_list = []
+        for k in range(size):
+            RHS_list.append(first_RHS.copy())
+            solutions_list.append(first_solution)
+        self.__init__(RHS_list, solutions_list)
+        
+    def cut_the_first_one(self):
+        assert self.size()>0
+        proportion_to_cut = 1/self.size()
+        return self.cut(proportion_to_cut)
