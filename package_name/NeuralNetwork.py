@@ -68,8 +68,10 @@ class nn:
     def add_processing_linear_mean(self):
         """trains with a linear transform for the solutions so that mean is 0.5 and the values are between 0 and 1. Chosing factor > 2 makes you put the values tighter around 0.5 """
         self.pre_processing.append(["linear_mean", None, None]) # (name, a, b) for x -> a*x + b
+        
     def add_processing_add_const(self, number_of_const_to_add):
         self.pre_processing.append(["add_const", number_of_const_to_add])
+        
     def evaluate(self, dataset_instance):
         """ Evaluates the network with the dataset. Arguments : class dataset Out : class to_analyze"""
         raise(Exception("modify this method, predict is different"))
@@ -112,7 +114,7 @@ class nn:
                 dataset_instance.RHS.add_const(processing[1])
 
 
-        history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs, validation_split) # training the network
+        history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs=epochs, validation_split=validation_split) # training the network
         object_to_analyze = self.predict(initial_dataset_instance)
         object_to_analyze.add_learning_history(history)
         object_to_analyze.add_used_nn(self)
