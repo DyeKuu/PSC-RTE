@@ -82,9 +82,6 @@ class nn:
     def predict(self, dataset_instance):
         self.compile()
         new_dataset_instance = dataset_instance.copy()
-        print("before any processing")
-        print(new_dataset_instance.get_RHS())
-        print(new_dataset_instance.get_solutions)
         for processing in self.pre_processing: #pre_processing
             if processing[0] == "add_const":
                 new_dataset_instance.RHS.add_const(processing[1])

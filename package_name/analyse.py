@@ -35,10 +35,9 @@ class to_analyze:
         return number_over_precision / self.size
 
     def precision_histogram(self):
-        precision_array = np.empty_like(self.solutions)
-        for i in range(len(self.solutions)):
-            precision_array[i] = abs((self.predictions[i] - self.solutions[i]) / self.solutions[i])
-        histogramme = plt.hist(precision_array, bins=50)
+        precision_array = np.absolute((self.predictions - self.solutions)/self.solutions)
+        histogramme = plt.hist(precision_array, density = True, bins = 50, range = (-np.max(precision_array)*0.1, np.max(precision_array)*1.1))
+        plt.xlim(-np.max(precision_array)*0.1, np.max(precision_array)*1.1)
         plt.axvline(self.hoped_precision, label="hoped precision = " + str(self.hoped_precision))
         plt.xlabel("relative precision")
         plt.ylabel("density")
