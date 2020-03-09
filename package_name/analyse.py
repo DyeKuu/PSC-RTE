@@ -38,8 +38,8 @@ class to_analyze:
 
     def precision_histogram(self, beginning_of_title = None):
         precision_array = np.absolute((self.predictions - self.solutions)/self.solutions)
-        histogramme = plt.hist(precision_array, density = True, bins = 50, range = (-np.max(precision_array)*0.1, np.max(precision_array)*1.1))
-        plt.xlim(-np.max(precision_array)*0.1, np.max(precision_array)*1.1)
+        histogramme = plt.hist(precision_array, density = True, bins = 50, range = (-np.nanmax(precision_array)*0.1, np.nanmax(precision_array)*1.1))
+        plt.xlim(-np.nanmax(precision_array)*0.1, np.nanmax(precision_array)*1.1)
         plt.axvline(self.hoped_precision, label="hoped precision = " + str(self.hoped_precision))
         plt.xlabel("relative precision")
         plt.ylabel("density")
