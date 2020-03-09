@@ -171,7 +171,7 @@ class dataset:
         plt.show()
         
     def set_similar(self, size = None):
-    """sets all the RHS and solutions to make them similar to the first one"""
+        """sets all the RHS and solutions to make them similar to the first one"""
         if size == None:
             size = self.size()
         first_RHS = self.get_RHS()[0]
