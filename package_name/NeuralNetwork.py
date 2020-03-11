@@ -2,7 +2,7 @@ import tensorflow as tf
 from package_name.analyse import to_analyze
 from package_name.dataset import dataset
 import numpy as np
-
+import matplotlib.pyplot as plt
 # This class implements a neural network. The neural_network is trained and tested with an instance of dataset
 # This class allows to modify the neural network
 
@@ -71,7 +71,9 @@ class nn:
         
     def add_processing_add_const(self, number_of_const_to_add):
         self.pre_processing.append(["add_const", number_of_const_to_add])
-        
+    def add_processing_linear_divby_max(self):
+        self.pre_processing.append(["linear_max", None, None])
+
     def evaluate(self, dataset_instance):
         """ Evaluates the network with the dataset. Arguments : class dataset Out : class to_analyze"""
         raise(Exception("modify this method, predict is different"))
@@ -91,7 +93,7 @@ class nn:
         object_to_analyze = to_analyze(new_dataset_instance.get_solutions(), self.model.predict(new_dataset_instance.get_RHS()).flatten())
 
         for processing in self.pre_processing[::-1]: #post_processing
-            if processing[0] == "linear_mean":
+            if processing[0] == "linear_mean" or processing[0] == "linear_max":
                 object_to_analyze.untransform_predictions_linear(processing[1], processing[2])
         object_to_analyze.add_used_nn(self)
         return object_to_analyze
@@ -112,7 +114,10 @@ class nn:
                 dataset_instance.solutions.apply_linear(a, b)
             elif processing[0] == "add_const":
                 dataset_instance.RHS.add_const(processing[1])
-
+            elif processing[0] == "linear_max":
+                max_sol = 1/np.max(abs(dataset_instance.get_solutions()))
+                processing[1], processing[2] = max_sol, 0.0
+                dataset_instance.solutions.apply_linear(processing[1], processing[2])
 
         history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs=epochs, validation_split=validation_split) # training the network
         object_to_analyze = self.predict(initial_dataset_instance)
@@ -120,7 +125,7 @@ class nn:
         object_to_analyze.add_used_nn(self)
 
         for processing in self.pre_processing[::-1]: ### post processing
-            if processing[0] == "linear":
+            if processing[0] == "linear_mean" or processing[0] == "linear_max":
                 object_to_analyze.untransform_predictions_linear(processing[1], processing[2])
 
         return object_to_analyze
