@@ -98,7 +98,8 @@ class solutions:
     def get_solutions(self):
         """return an array with the solutions"""
         return self.content
-
+    def set_solutions(self, new_solutions):
+        self.__init__(new_solutions)
 
 class dataset:
     # Parameters of an instance of dataset :
@@ -127,7 +128,11 @@ class dataset:
     def get_RHS(self):
         """returns the solutions as an array"""
         return self.RHS.get_RHS()
-
+    def set_RHS(self, new_RHS):
+        self.__init__(new_RHS, self.get_solutions())
+    def set_solutions(self, new_solutions):
+        assert len(new_solutions) == self.size()
+        self.solutions.set_solutions(new_solutions)
     def dump_in_file(self, file_name):  # puts the content in a pickle file (we get it back with __init__)
         import pickle
         set = (self.RHS.get_RHS(), self.solutions.get_solutions())
