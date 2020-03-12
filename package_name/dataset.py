@@ -56,7 +56,8 @@ class RHS:  # contains a set of second members
         n = self.size()
         const_matrix = np.ones((n, number_of_const))
         self.__init__(np.hstack((self.get_RHS(), const_matrix)))
-
+    def save_csv(self, name):
+        np.savetxt(name, self.content,delimiter=',')
 
 class solutions:
     def __init__(self, data):
@@ -86,7 +87,8 @@ class solutions:
         """f is the function applied to every solution"""
         for i in range(self.size()):
             self.content[i] = f(self.content[i])
-
+    def save_csv(self, name):
+        np.savetxt(name, self.content,delimiter=',')
     def apply_linear(self, a, b):
         """ applies a linear transformation to every solution"""
         self.apply(lambda x: a * x + b)
@@ -121,7 +123,6 @@ class dataset:
     def get_solutions(self):
         """returns the solutions as an array"""
         return self.solutions.get_solutions()
-
     def size(self):
         return self.RHS.size()
 
