@@ -141,7 +141,7 @@ class dataset:
     def to_csv(self, name):
         reshaped_sol = np.reshape(self.get_solutions(), (self.size(),1))
         concatenated = np.concatenate((self.get_RHS(), reshaped_sol), axis = 1)
-        np.savetxt(name,concatenated, delimiter=',',header="Predict the last column using the 3 first ones")
+        np.savetxt(name,concatenated, delimiter=',',header="Predict the last column using the first ones")
     def cut(self, proportion_to_cut):
         """cuts a random part of the dataset and returns a new dataset. The cut data is deleted from the first dataset"""
         size = self.size()

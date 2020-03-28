@@ -52,7 +52,7 @@ class to_analyze:
         # plt.show()
 
     def mean_squared_error(self):
-        return abs(self.predictions - self.solutions)
+        return np.linalg.norm(self.predictions - self.solutions)
 
     def mean_precision_error(self):
         return np.mean(np.absolute((self.predictions - self.solutions) / self.solutions))
