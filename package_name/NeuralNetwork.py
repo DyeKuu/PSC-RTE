@@ -2,7 +2,6 @@ import tensorflow as tf
 from package_name.analyse import to_analyze
 from package_name.dataset import dataset
 import numpy as np
-from keras.callbacks import ReduceLROnPlateau
 import matplotlib.pyplot as plt
 # This class implements a neural network. The neural_network is trained and tested with an instance of dataset
 # This class allows to modify the neural network
@@ -28,10 +27,6 @@ class nn:
         self.file_name = None
         self.pre_processing = [] #contains the information about the pre treatment of the data. Post treatment is also defined by this field
         self.factor = 2.1 #only for linear pre treatment
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                                      patience=3, min_lr=0.00001)
-        self.callback = [reduce_lr]
-
 
     def basic_nn(self, list_n_neurons, last_activation = None):
         """Initialises the network with layers whose numbers of neurons are given in the argument"""
@@ -68,7 +63,7 @@ class nn:
         self.metrics = [metrics_name]
 
     def fit(self, pb_train, sol_train, epochs, validation_split):
-        return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split,callbacks = self.callback)
+        return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split)
     
     def add_processing_linear_mean(self):
         """trains with a linear transform for the solutions so that mean is 0.5 and the values are between 0 and 1. Chosing factor > 2 makes you put the values tighter around 0.5 """
@@ -78,7 +73,8 @@ class nn:
         self.pre_processing.append(["add_const", number_of_const_to_add])
     def add_processing_linear_divby_max(self):
         self.pre_processing.append(["linear_max", None, None])
-
+    def add_processing_standard(self):
+        self.pre_processing.append(["linear_standard", None, None, 0, 0]) # contient ("linear_standard", list_sigma_coordinate_RHS, list_mean_coordinate_RHS, sigma_sol, mean_sol)
     def evaluate(self, dataset_instance):
         """ Evaluates the network with the dataset. Arguments : class dataset Out : class to_analyze"""
         raise(Exception("modify this method, predict is different"))
@@ -94,12 +90,22 @@ class nn:
         for processing in self.pre_processing: #pre_processing
             if processing[0] == "add_const":
                 new_dataset_instance.RHS.add_const(processing[1])
+            elif processing[0] == "linear_standard":
+                rhs_matrix = new_dataset_instance.get_RHS()
+                std = processing[1]
+                mean = processing[2]
+                rhs_matrix = (rhs_matrix - mean)/std
+                new_dataset_instance.set_RHS(rhs_matrix)
 
         object_to_analyze = to_analyze(new_dataset_instance.get_solutions(), self.model.predict(new_dataset_instance.get_RHS()).flatten())
 
         for processing in self.pre_processing[::-1]: #post_processing
             if processing[0] == "linear_mean" or processing[0] == "linear_max":
                 object_to_analyze.untransform_predictions_linear(processing[1], processing[2])
+            elif processing[0] == "linear_standard":
+                std = processing[3]
+                mean = processing[4]
+                object_to_analyze.untransform_predictions_linear(1/std, -mean/std)
         object_to_analyze.add_used_nn(self)
         return object_to_analyze
 
@@ -123,15 +129,27 @@ class nn:
                 max_sol = 1/np.max(abs(dataset_instance.get_solutions()))
                 processing[1], processing[2] = max_sol, 0.0
                 dataset_instance.solutions.apply_linear(processing[1], processing[2])
+            elif processing[0] == "linear_standard":
+                ##
+                rhs_matrix = dataset_instance.get_RHS()
+                std = np.std(rhs_matrix, axis=0)
+                mean = np.mean(rhs_matrix, axis=0)
+                print("std and mean shape ", std.shape, mean.shape)
+                rhs_matrix = (rhs_matrix - mean) / std
+                dataset_instance.set_RHS(rhs_matrix)
+                processing[1] = std
+                processing[2] = mean
+                std_sol = np.std(dataset_instance.get_solutions())
+                mean_sol = np.mean(dataset_instance.get_solutions())
+                dataset_instance.solutions.apply_linear(1/std_sol, - mean_sol/std_sol)
+                processing[3] = std_sol
+                processing[4] = mean_sol
+                ##
 
         history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs=epochs, validation_split=validation_split) # training the network
         object_to_analyze = self.predict(initial_dataset_instance)
         object_to_analyze.add_learning_history(history)
         object_to_analyze.add_used_nn(self)
-
-        for processing in self.pre_processing[::-1]: ### post processing
-            if processing[0] == "linear_mean" or processing[0] == "linear_max":
-                object_to_analyze.untransform_predictions_linear(processing[1], processing[2])
 
         return object_to_analyze
 
