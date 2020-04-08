@@ -62,8 +62,8 @@ class nn:
     def set_metrics(self, metrics_name):
         self.metrics = [metrics_name]
 
-    def fit(self, pb_train, sol_train, epochs, validation_split):
-        return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split)
+    def fit(self, pb_train, sol_train, epochs, validation_split, batch_size):
+        return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split, batch_size= batch_size)
     
     def add_processing_linear_mean(self):
         """trains with a linear transform for the solutions so that mean is 0.5 and the values are between 0 and 1. Chosing factor > 2 makes you put the values tighter around 0.5 """
@@ -109,7 +109,7 @@ class nn:
         object_to_analyze.add_used_nn(self)
         return object_to_analyze
 
-    def train_with(self, initial_dataset_instance, epochs, validation_split):
+    def train_with(self, initial_dataset_instance, epochs, validation_split, batch_siz):
         """ Trains the network using the dataset. Arguments : class dataset Out : class to_analyze"""
         self.compile()
         assert isinstance(initial_dataset_instance, dataset)
@@ -146,7 +146,7 @@ class nn:
                 processing[4] = mean_sol
                 ##
 
-        history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs=epochs, validation_split=validation_split) # training the network
+        history = self.fit(dataset_instance.get_RHS(), dataset_instance.get_solutions(), epochs=epochs, validation_split=validation_split, batch_size = batch_siz) # training the network
         object_to_analyze = self.predict(initial_dataset_instance)
         object_to_analyze.add_learning_history(history)
         object_to_analyze.add_used_nn(self)
