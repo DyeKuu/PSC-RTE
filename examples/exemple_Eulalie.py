@@ -1,7 +1,7 @@
 from package_name.dataset import dataset
 from package_name.generator import problem_generator
 from package_name.NeuralNetwork import nn
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 ### Creating the data
 # data = problem_generator(['petit_probleme.lp'], 100000, 0.1, [23, 24, 25])
