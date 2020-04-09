@@ -52,10 +52,12 @@ class RHS:  # contains a set of second members
 
     def get_RHS(self):
         return self.content
+    
     def add_const(self, number_of_const):
         n = self.size()
         const_matrix = np.ones((n, number_of_const))
         self.__init__(np.hstack((self.get_RHS(), const_matrix)))
+        
     def save_csv(self, name):
         np.savetxt(name, self.content,delimiter=',')
 
@@ -126,6 +128,7 @@ class dataset:
     def get_solutions(self):
         """returns the solutions as an array"""
         return self.solutions.get_solutions()
+    
     def size(self):
         return self.RHS.size()
 
