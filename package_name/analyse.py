@@ -48,8 +48,9 @@ class to_analyze:
         else:
             plt.title(beginning_of_title + "The proportion of predictions over relative precision " + str(self.hoped_precision) + " is " + str(self.rate_over_precision()))
         plt.legend()
+        plt.show()
         return histogramme
-        # plt.show()
+        
         
 
     def mean_squared_error(self):
