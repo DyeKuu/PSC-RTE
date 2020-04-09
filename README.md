@@ -13,9 +13,7 @@ This is a project by 5 students of Ecole Polytechnique, cooperated with RTE who 
 
 - [Strategy](#strategy)
 - [Structure](#structure)
-- [Install](#install)
-- [Usage](#usage)
-- [Contributing](#contributing)
+- [Contributors](#contributors)
 - [License](#license)
 
 ## Strategy
@@ -37,6 +35,21 @@ A folder where we store the data of the problem we generated from small problem.
 A folder which contains several example written by the group member to execute the code. It suffices to extract the file in the same directory as the folder [package_name](https://github.com/DyeKuu/PSC-RTE/tree/master/package_name).
 ### notebook_files
 A folder where we find the files of jupyter notebook written mainly in the purpose of building the first neural network and using the package cplex to solve the linear programming problems.
+### obsolete
+A folder which contains mainly the old version of the code.
+### package_name
+Our basic as well as important folder, where we have written the different class and skeleton for our project.
+### report
+A folder where you can find some figure for this README and our report.
+
+## Contributors
+This project exists thanks to all the people who contribute. 
+
+[o-Eulalie-o](https://github.com/o-Eulalie-o)
+[EtiMag](https://github.com/EtiMag)
+[qym7](https://github.com/qym7)
+[Kragon-Nox](https://github.com/Kragon-Nox)
+[DyeKuu](https://github.com/DyeKuu)
 ## License
 
 [GNU Affero General Public License v3.0](https://raw.githubusercontent.com/DyeKuu/PSC-RTE/master/LICENSE)
