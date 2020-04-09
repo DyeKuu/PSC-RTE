@@ -87,8 +87,10 @@ class solutions:
         """f is the function applied to every solution"""
         for i in range(self.size()):
             self.content[i] = f(self.content[i])
+            
     def save_csv(self, name):
         np.savetxt(name, self.content,delimiter=',')
+        
     def apply_linear(self, a, b):
         """ applies a linear transformation to every solution"""
         self.apply(lambda x: a * x + b)
@@ -100,6 +102,7 @@ class solutions:
     def get_solutions(self):
         """return an array with the solutions"""
         return self.content
+    
     def set_solutions(self, new_solutions):
         self.__init__(new_solutions)
 
@@ -129,19 +132,24 @@ class dataset:
     def get_RHS(self):
         """returns the solutions as an array"""
         return self.RHS.get_RHS()
+    
     def set_RHS(self, new_RHS):
         self.__init__(new_RHS, self.get_solutions())
+        
     def set_solutions(self, new_solutions):
         assert len(new_solutions) == self.size()
         self.solutions.set_solutions(new_solutions)
+        
     def dump_in_file(self, file_name):  # puts the content in a pickle file (we get it back with __init__)
         import pickle
         set = (self.RHS.get_RHS(), self.solutions.get_solutions())
         pickle.dump(set, open(file_name, "wb"))
+        
     def to_csv(self, name):
         reshaped_sol = np.reshape(self.get_solutions(), (self.size(),1))
         concatenated = np.concatenate((self.get_RHS(), reshaped_sol), axis = 1)
         np.savetxt(name,concatenated, delimiter=',',header="Predict the last column using the first ones")
+        
     def cut(self, proportion_to_cut):
         """cuts a random part of the dataset and returns a new dataset. The cut data is deleted from the first dataset"""
         size = self.size()
