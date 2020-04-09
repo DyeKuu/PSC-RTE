@@ -34,7 +34,7 @@ Finally, we pass all the data into a class [to_analyse](https://raw.github.com/D
 ### data
 A folder where we store the data of the problem we generated from small problem.
 ### example
-A folder which contains several example written by the group member to execute the code. It suffices to extract the file in the same directory as the folder [package_name](https://raw.github.com/DyeKuu/PSC-RTE/master/package_name).
+A folder which contains several example written by the group member to execute the code. It suffices to extract the file in the same directory as the folder [package_name](https://github.com/DyeKuu/PSC-RTE/tree/master/package_name).
 ### notebook_files
 A folder where we find the files of jupyter notebook written mainly in the purpose of building the first neural network and using the package cplex to solve the linear programming problems.
 ## License
