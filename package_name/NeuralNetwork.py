@@ -28,8 +28,7 @@ class nn:
         self.file_name = None
         self.pre_processing = [] #contains the information about the pre treatment of the data. Post treatment is also defined by this field
         self.factor = 2.1 #only for linear pre treatment
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                                      patience=2, min_lr=0.0000001)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=2, min_lr=0.0000001)
         self.callback = [reduce_lr]
 
     def basic_nn(self, list_n_neurons, last_activation = None):
@@ -44,11 +43,14 @@ class nn:
         else:
             self.model.add(tf.keras.layers.Dense(1, activation = last_activation))
 
+            
+            
     def add_relu(self, nb_neurons):
         self.model.add(tf.keras.layers.Dense(nb_neurons, activation="relu"))
 
     def add_sigmoid(self, nb_neurons):
         self.model.add(tf.keras.layers.Dense(nb_neurons, activation="sigmoid"))
+        
     def add_no_activation(self, nb_neurons):
         self.model.add(tf.keras.layers.Dense(nb_neurons))
 
@@ -65,9 +67,13 @@ class nn:
 
     def set_metrics(self, metrics_name):
         self.metrics = [metrics_name]
+        
+        
 
     def fit(self, pb_train, sol_train, epochs, validation_split, batch_size):
         return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split, batch_size= batch_size,callbacks = self.callback)
+    
+    
     
     def add_processing_linear_mean(self):
         """trains with a linear transform for the solutions so that mean is 0.5 and the values are between 0 and 1. Chosing factor > 2 makes you put the values tighter around 0.5 """
@@ -75,18 +81,14 @@ class nn:
         
     def add_processing_add_const(self, number_of_const_to_add):
         self.pre_processing.append(["add_const", number_of_const_to_add])
+        
     def add_processing_linear_divby_max(self):
         self.pre_processing.append(["linear_max", None, None])
+        
     def add_processing_standard(self):
         self.pre_processing.append(["linear_standard", None, None, 0, 0]) # contient ("linear_standard", list_sigma_coordinate_RHS, list_mean_coordinate_RHS, sigma_sol, mean_sol)
-    def evaluate(self, dataset_instance):
-        """ Evaluates the network with the dataset. Arguments : class dataset Out : class to_analyze"""
-        raise(Exception("modify this method, predict is different"))
-        history = self.model.evaluate(dataset_instance.get_RHS(), dataset_instance.get_solutions())
-        object_to_analyze = to_analyze(dataset_instance.get_solutions(), self.model.predict(dataset_instance.get_RHS()))
-        object_to_analyze.add_learning_history(history)
-        object_to_analyze.add_used_nn(self)
-        return object_to_analyze
+    
+  
 
     def predict(self, dataset_instance):
         self.compile()
@@ -112,6 +114,7 @@ class nn:
                 object_to_analyze.untransform_predictions_linear(1/std, -mean/std)
         object_to_analyze.add_used_nn(self)
         return object_to_analyze
+    
 
     def train_with(self, initial_dataset_instance, epochs, validation_split, batch_siz):
         """ Trains the network using the dataset. Arguments : class dataset Out : class to_analyze"""
@@ -157,6 +160,8 @@ class nn:
 
         return object_to_analyze
 
+    
+    
     def save_model(self, name=None):
         """ Says the model with the given name. If no name is given, the previous name is used"""
         if name is None:  # If we don't give a name, then teh previous name is used
