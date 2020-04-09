@@ -1,5 +1,4 @@
-![helo-w150](https://raw.github.com/DyeKuu/PSC-RTE/master/report/icon_RTE.jpg)
-![](https://raw.github.com/DyeKuu/PSC-RTE/master/report/icon_X.jpg)
+![](https://raw.github.com/DyeKuu/PSC-RTE/master/report/icon.png)
 generator -> (generates) -> instance of dataset -> (is given to) -> instance of nn -> (generates) -> instance of to_analyse
 
 data.py and NeuralNetwork.py contain basic classes and methods for both datasets and Neural Networks.
