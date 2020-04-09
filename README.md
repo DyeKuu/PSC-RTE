@@ -7,7 +7,7 @@
 ### Tuteur : M. Manuel Ruiz
 ### Coordinateur : M. Emmanuel Haucourt
 
-This is a project by 5 students of Ecole Polytechnique, cooperated with RTE who has provided the subject. The object of this project is to explore the possibility of solving a large number big linear programming problems, which vary only in the part of RHS (Right-Hand Side) in the constraints, by means of machine learning.
+This is a project by 5 students of Ecole Polytechnique, cooperating with RTE who has provided the subject. The object of this project is to explore the possibility of solving a large number big linear programming problems, which vary only in the part of RHS (Right-Hand Side) in the constraints, by means of machine learning.
 
 ## Table of Contents
 
