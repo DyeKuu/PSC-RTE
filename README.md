@@ -12,7 +12,7 @@ This is a project by 5 students of Ecole Polytechnique, cooperated with RTE who 
 ## Table of Contents
 
 - [Strategy](#strategy)
-- [Background](#background)
+- [Structure](#structure)
 - [Install](#install)
 - [Usage](#usage)
 - [Contributing](#contributing)
@@ -22,14 +22,21 @@ This is a project by 5 students of Ecole Polytechnique, cooperated with RTE who 
 ![](https://raw.github.com/DyeKuu/PSC-RTE/master/report/strategy.png)
 
 
-generator -> (generates) -> instance of dataset -> (is given to) -> instance of nn -> (generates) -> instance of to_analyse
+Given a small linear programming problem(in format .lp or .mps), we use the class [generator](https://raw.github.com/DyeKuu/PSC-RTE/master/package_name/generator.py) to add some gaussian noise to the coefficients thus to generate other similar problems.
 
-data.py and NeuralNetwork.py contain basic classes and methods for both datasets and Neural Networks.
+Then by using the class [dataset](https://raw.github.com/DyeKuu/PSC-RTE/master/package_name/dataset.py), we encapsulate the RHS and its corresponding solution in it, forming the input and the label for the neural network.
 
-"exemple" links all files and classes together
+We have also written a class [nn]() in [NeuralNetwork.py](https://raw.github.com/DyeKuu/PSC-RTE/master/package_name/NeuralNetwork.py) that encapsulates the neural network and all the methods related to it.
 
-"petits_problemes_1-000" is a file containing a dataset (1000 "petits problèmes") made from "petit_probleme.lp" with dev = 0.1
+Finally, we pass all the data into a class [to_analyse](https://raw.github.com/DyeKuu/PSC-RTE/master/package_name/analyse.py) where we implement the codes for evaluation the performance and plot figures.
 
+## Structure
+### data
+A folder where we store the data of the problem we generated from small problem.
+### example
+A folder which contains several example written by the group member to execute the code. It suffices to extract the file in the same directory as the folder [package_name](https://raw.github.com/DyeKuu/PSC-RTE/master/package_name).
+### notebook_files
+A folder where we find the files of jupyter notebook written mainly in the purpose of building the first neural network and using the package cplex to solve the linear programming problems.
 ## License
 
-[GNU Affero General Public License v3.0](../LICENSE)
+[GNU Affero General Public License v3.0](https://raw.githubusercontent.com/DyeKuu/PSC-RTE/master/LICENSE)
