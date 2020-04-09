@@ -8,10 +8,7 @@
 
 import cplex
 import numpy as np
-from cplex.exceptions import CplexSolverError
-
 from package_name.dataset import dataset
-from os import listdir
 
 # lin_opt_pbs is a class representing linear optimization problems.
 # It will be used to generate new linear optimization problems
@@ -37,12 +34,18 @@ class lin_opt_pbs:
             self.name_list = prob_name_list
             prob_list = [cplex.Cplex() for i in range(n)]
             for i in range(n):
-                prob_list[i].read(path + prob_name_list[i])
+                if path == None:
+                    prob_list[i].read(prob_name_list[i])
+                else:
+                    prob_list[i].read(path + prob_name_list[i])
             self.prob_list = prob_list
         if isinstance(prob_name_list[0], cplex.Cplex):
             name_list = []
             for i in range(n):
-                name_list.append(("problem_(%d)", i))
+                if path == None:
+                    name_list.append(("problem_(%d)", i))
+                else :
+                    name_list.append((path +"problem_(%d)", i))
             self.name_list = name_list
             self.prob_list = prob_name_list
         self.dev = 0
@@ -145,13 +148,8 @@ class lin_opt_pbs:
         new_list = []
         nb_pb = len(self.prob_list)
         for pb in range(nb_pb):
-            try:
-                (self.prob_list[pb]).solve()
-                new_list.append((self.prob_list[pb]).solution.get_objective_value())
-            except CplexSolverError as e:
-                print("Skip no solution problem")
-                new_list.append(np.nan)
-                pass
+            (self.prob_list[pb]).solve()
+            new_list.append((self.prob_list[pb]).solution.get_objective_value())
         return (new_list)
 
 
@@ -170,23 +168,23 @@ class lin_opt_pbs:
 # Output:  a dataset instance containing N RHS and their N associated solutions
 
 def problem_generator(problems, N, dev, non_fixed_vars=None, path=None):
-    prob_root = lin_opt_pbs(problems, non_fixed_vars, path)
+    prob_root = lin_opt_pbs(problems, non_fixed_vars, path=path)
     prob_root.set_deviation(dev)
     K = len(prob_root.prob_list)
+    
+    prob_temp = lin_opt_pbs([cplex.Cplex()])
+    prob_temp.prob_list[0].read(prob_root.name_list[0])
+    
+    prob_temp.set_deviation(dev)
+    prob_temp.set_non_fixed_vars(prob_root.get_non_fixed_vars())
     rhs_list = []
     sol_list = []
-    for k in range(K):
-        prob_temp = lin_opt_pbs([cplex.Cplex()])
-        prob_temp.prob_list[0].read(path+prob_root.name_list[k])
-    
-        prob_temp.set_deviation(dev)
-        prob_temp.set_non_fixed_vars(prob_root.get_non_fixed_vars())
-        for i in range(N):
-            ind = np.random.randint(K)
-            prob_root.modify_random_prob(ind, prob_temp)
-            rhs_list.extend(prob_temp.extract_RHS())
-            sol_list.extend(prob_temp.calculate_solutions())
-        data = dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
+    for i in range(N):
+        ind = np.random.randint(K)
+        prob_root.modify_random_prob(ind, prob_temp)
+        rhs_list.extend(prob_temp.extract_RHS())
+        sol_list.extend(prob_temp.calculate_solutions())
+    data = dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
     return data
 
 
@@ -233,22 +231,3 @@ def problem_generator_with_steady_modification_of_unique_constraint(problems, N,
     rhs_list = np.array(rhs_list).reshape(-1,1)
     data = dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
     return data
-
-
-
-# Testing the methods defined above
-# data = problem_generator_with_steady_modification_of_unique_constraint(['petit_probleme.lp'], 5000, 30, [25])
-# print(data.get_RHS())
-# print(data.get_solutions())
-# data.sol_fct_of_RHS()
-
-
-path = r"G://SSD-PSC//Data_RTE//hello//"
-data = problem_generator(listdir(path), 100, 0.00000001, path=path)
-print(data.get_RHS())
-print(data.get_solutions())
-data.dump_in_file("RTE")
-
-new_dataset = dataset("RTE")
-print("resultat")
-print(new_dataset.get_RHS().shape)
