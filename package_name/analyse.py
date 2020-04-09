@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 # This class is created by an instance of nn
 # It is used to analyze the nn object performance on the dataset
+
 class to_analyze:
     def __init__(self, solutions, predictions):  # solutions and predictions must be vectors
         assert isinstance(solutions, np.ndarray)
@@ -32,9 +33,8 @@ class to_analyze:
         for i in range(len(self.solutions)):
             if abs((self.predictions[i] - self.solutions[i]) / self.solutions[i]) > self.hoped_precision:
                 number_over_precision += 1
- #       print("The proportion of predictions over relative precision ", self.hoped_precision, " is ",
- #             number_over_precision / self.size)
         return number_over_precision / self.size
+    
 
     def precision_histogram(self, beginning_of_title = None):
         precision_array = np.absolute((self.predictions - self.solutions)/self.solutions)
@@ -50,13 +50,16 @@ class to_analyze:
         plt.legend()
         return histogramme
         # plt.show()
+        
 
     def mean_squared_error(self):
         return np.linalg.norm(self.predictions - self.solutions)
 
     def mean_precision_error(self):
         return np.mean(np.absolute((self.predictions - self.solutions) / self.solutions))
+    
     def get_solutions(self):
         return self.solutions
+    
     def get_predictions(self):
         return self.predictions
