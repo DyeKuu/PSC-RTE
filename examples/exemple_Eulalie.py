@@ -16,7 +16,7 @@ neural_network.set_metrics(["mean_absolute_percentage_error"])
 #neural_network.add_processing_linear_mean()
 
 ### Training the neural network
-training_data = neural_network.train_with(problem_set_for_training, epochs, 0.3)
+training_data = neural_network.train_with(problem_set_for_training, epochs, 0.3,1)
 
 ### Evaluating the neural network
 evaluation_data = evaluation_data = neural_network.predict(problem_set_for_evaluation)
