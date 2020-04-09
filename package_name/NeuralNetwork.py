@@ -3,6 +3,7 @@ from package_name.analyse import to_analyze
 from package_name.dataset import dataset
 import numpy as np
 import matplotlib.pyplot as plt
+from keras.callbacks import ReduceLROnPlateau
 # This class implements a neural network. The neural_network is trained and tested with an instance of dataset
 # This class allows to modify the neural network
 
@@ -27,6 +28,9 @@ class nn:
         self.file_name = None
         self.pre_processing = [] #contains the information about the pre treatment of the data. Post treatment is also defined by this field
         self.factor = 2.1 #only for linear pre treatment
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                                      patience=2, min_lr=0.0000001)
+        self.callback = [reduce_lr]
 
     def basic_nn(self, list_n_neurons, last_activation = None):
         """Initialises the network with layers whose numbers of neurons are given in the argument"""
@@ -63,7 +67,7 @@ class nn:
         self.metrics = [metrics_name]
 
     def fit(self, pb_train, sol_train, epochs, validation_split, batch_size):
-        return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split, batch_size= batch_size)
+        return self.model.fit(x=pb_train, y=sol_train, epochs=epochs, validation_split=validation_split, batch_size= batch_size,callbacks = self.callback)
     
     def add_processing_linear_mean(self):
         """trains with a linear transform for the solutions so that mean is 0.5 and the values are between 0 and 1. Chosing factor > 2 makes you put the values tighter around 0.5 """
