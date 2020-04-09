@@ -13,7 +13,7 @@ This is a project by 5 students of Ecole Polytechnique, cooperating with RTE who
 
 - [Strategy](#strategy)
 - [Structure](#structure)
-- [Contributors](#contributors)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Strategy
@@ -42,7 +42,9 @@ Our basic as well as important folder, where we have written the different class
 ### report
 A folder where you can find some figure for this README and our report.
 
-## Contributors
+##Contributing
+Feel free to dive in![Open an issue](https://github.com/DyeKuu/PSC-RTE/issues/new) or make a pull reaquest.
+### Contributors
 This project exists thanks to all the people who contribute. 
 
 [o-Eulalie-o](https://github.com/o-Eulalie-o)
