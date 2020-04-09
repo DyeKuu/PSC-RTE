@@ -43,7 +43,7 @@ Our basic as well as important folder, where we have written the different class
 A folder where you can find some figure for this README and our report.
 
 ## Contributing
-Feel free to dive in![Open an issue](https://github.com/DyeKuu/PSC-RTE/issues/new) or make a pull reaquest.
+Feel free to dive in! [Open an issue](https://github.com/DyeKuu/PSC-RTE/issues/new) or make a pull reaquest.
 ### Contributors
 This project exists thanks to all the people who contribute. 
 
