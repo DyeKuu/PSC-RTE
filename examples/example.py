@@ -12,7 +12,7 @@ neural_network.metrics = ["mean_absolute_percentage_error"]
 neural_network.loss = "mean_absolute_percentage_error"
 neural_network.set_treatment_linear()
 ### Training the neural network
-neural_network.train_with(problem_set, epochs, 0.3)
+neural_network.train_with(problem_set, epochs, 0.3,1)
 analyze_set = neural_network.predict(problem_set2)
 analyze_set.hoped_precision = 0.0001
 

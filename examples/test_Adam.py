@@ -1,6 +1,6 @@
 from package_name.dataset import dataset
 from package_name.NeuralNetwork import nn
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 ### Creating the data
 # data = problem_generator(['petit_probleme.lp'], 100000, 0.1, [23, 24, 25])
@@ -17,7 +17,7 @@ neural_network.set_optimizer("Adam")
 neural_network.add_processing_linear_mean()
 
 ### Training the neural network
-training_data = neural_network.train_with(problem_set_for_training, epochs, 0.1)
+training_data = neural_network.train_with(problem_set_for_training, epochs, 0.1,1)
 
 ### Evaluating the neural network
 evaluation_data = neural_network.predict(problem_set_for_evaluation)

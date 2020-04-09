@@ -28,7 +28,7 @@ class nn:
         self.file_name = None
         self.pre_processing = [] #contains the information about the pre treatment of the data. Post treatment is also defined by this field
         self.factor = 2.1 #only for linear pre treatment
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=2, min_lr=0.0000001)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.7,verbose=1, min_delta=1e-5, patience=2, cooldown=2, min_lr=0.000001)
         self.callback = [reduce_lr]
 
     def basic_nn(self, list_n_neurons, last_activation = None):
