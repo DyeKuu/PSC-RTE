@@ -10,6 +10,7 @@ import cplex
 import numpy as np
 from package_name.dataset import dataset
 
+
 # lin_opt_pbs is a class representing linear optimization problems.
 # It will be used to generate new linear optimization problems
 # by adding some noise (gaussian) to some chosen coefficients of a given problem.
@@ -44,8 +45,8 @@ class lin_opt_pbs:
             for i in range(n):
                 if path == None:
                     name_list.append(("problem_(%d)", i))
-                else :
-                    name_list.append((path +"problem_(%d)", i))
+                else:
+                    name_list.append((path + "problem_(%d)", i))
             self.name_list = name_list
             self.prob_list = prob_name_list
         self.dev = 0
@@ -115,7 +116,6 @@ class lin_opt_pbs:
             new_val = val + (np.random.normal(0, abs(val) * self.dev, 1))[0]  # add gaussian noise to the RHS
             new_list.append((indice, new_val))
         prob_to_modify.prob_list[0].linear_constraints.set_rhs(new_list)  # set the RHS to the bias RHS
-        
 
     # The method extract_RHS extracts some chosen coefficients from the RHS
     # of instances of lin_opt_pbs given in a list
@@ -171,10 +171,10 @@ def problem_generator(problems, N, dev, non_fixed_vars=None, path=None):
     prob_root = lin_opt_pbs(problems, non_fixed_vars, path=path)
     prob_root.set_deviation(dev)
     K = len(prob_root.prob_list)
-    
+
     prob_temp = lin_opt_pbs([cplex.Cplex()])
     prob_temp.prob_list[0].read(prob_root.name_list[0])
-    
+
     prob_temp.set_deviation(dev)
     prob_temp.set_non_fixed_vars(prob_root.get_non_fixed_vars())
     rhs_list = []
@@ -206,28 +206,28 @@ def problem_generator(problems, N, dev, non_fixed_vars=None, path=None):
 
 
 def problem_generator_with_steady_modification_of_unique_constraint(problems, N, dev, non_fixed_var):
-    assert (len(non_fixed_var)==1)
+    assert (len(non_fixed_var) == 1)
     prob_root = lin_opt_pbs(problems, non_fixed_var)
     rhs = prob_root.prob_list[0].linear_constraints.get_rhs()
     prob_root.set_deviation(dev)
     prob_root.set_non_fixed_vars(non_fixed_var)
-    
+
     prob_temp = lin_opt_pbs([cplex.Cplex()])
     prob_temp.prob_list[0].read(prob_root.name_list[0])
     prob_temp.set_deviation(dev)
     prob_temp.set_non_fixed_vars(non_fixed_var)
-    
+
     rhs_list = []
     sol_list = []
-    
+
     j = non_fixed_var[0]
-    
+
     for i in range(N):
-        new_value = rhs[j]*(1-dev) + (i+1)*2*rhs[j]*dev/N
+        new_value = rhs[j] * (1 - dev) + (i + 1) * 2 * rhs[j] * dev / N
         prob_temp.prob_list[0].linear_constraints.set_rhs([(j, new_value)])
         rhs_list.append(new_value)
         sol_list.extend(prob_temp.calculate_solutions())
 
-    rhs_list = np.array(rhs_list).reshape(-1,1)
+    rhs_list = np.array(rhs_list).reshape(-1, 1)
     data = dataset(rhs_list, sol_list)  # write either dataset or dataset.dataset to create a new instance
     return data

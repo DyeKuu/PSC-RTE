@@ -22,45 +22,46 @@ class to_analyze:
 
     def add_used_nn(self, neural_network):
         self.used_nn = neural_network
-        
+
     def untransform_predictions_linear(self, initial_a, initial_b):
-        a = 1/initial_a
-        b = -initial_b/initial_a
-        self.predictions = a*self.predictions + b
-        
+        a = 1 / initial_a
+        b = -initial_b / initial_a
+        self.predictions = a * self.predictions + b
+
     def rate_over_precision(self):
         number_over_precision = 0
         for i in range(len(self.solutions)):
             if abs((self.predictions[i] - self.solutions[i]) / self.solutions[i]) > self.hoped_precision:
                 number_over_precision += 1
         return number_over_precision / self.size
-    
 
-    def precision_histogram(self, beginning_of_title = None):
-        precision_array = np.absolute((self.predictions - self.solutions)/self.solutions)
-        histogramme = plt.hist(precision_array, density = True, bins = 50, range = (-np.nanmax(precision_array)*0.1, np.nanmax(precision_array)*1.1))
-        plt.xlim(-np.nanmax(precision_array)*0.1, np.nanmax(precision_array)*1.1)
+    def precision_histogram(self, beginning_of_title=None):
+        precision_array = np.absolute((self.predictions - self.solutions) / self.solutions)
+        histogramme = plt.hist(precision_array, density=True, bins=50,
+                               range=(-np.nanmax(precision_array) * 0.1, np.nanmax(precision_array) * 1.1))
+        plt.xlim(-np.nanmax(precision_array) * 0.1, np.nanmax(precision_array) * 1.1)
         plt.axvline(self.hoped_precision, label="hoped precision = " + str(self.hoped_precision))
         plt.xlabel("relative precision")
         plt.ylabel("density")
-        if beginning_of_title == None :
-            plt.title("The proportion of predictions over relative precision " + str(self.hoped_precision) + " is " + str(self.rate_over_precision()))
+        if beginning_of_title == None:
+            plt.title(
+                "The proportion of predictions over relative precision " + str(self.hoped_precision) + " is " + str(
+                    self.rate_over_precision()))
         else:
-            plt.title(beginning_of_title + "The proportion of predictions over relative precision " + str(self.hoped_precision) + " is " + str(self.rate_over_precision()))
+            plt.title(beginning_of_title + "The proportion of predictions over relative precision " + str(
+                self.hoped_precision) + " is " + str(self.rate_over_precision()))
         plt.legend()
         plt.show()
         return histogramme
-        
-        
 
     def mean_squared_error(self):
         return np.linalg.norm(self.predictions - self.solutions)
 
     def mean_precision_error(self):
         return np.mean(np.absolute((self.predictions - self.solutions) / self.solutions))
-    
+
     def get_solutions(self):
         return self.solutions
-    
+
     def get_predictions(self):
         return self.predictions
