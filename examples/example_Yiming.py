@@ -34,7 +34,7 @@ layers_list, last_activation, epochs, neural_network = [1], None, 60, nn()
 neural_network.basic_nn(layers_list)
 neural_network.metrics = ["mean_absolute_percentage_error"]
 neural_network.loss = "mean_squared_error"
-analyze_train = neural_network.train_with(problem_set, epochs, 0.3)
+analyze_train = neural_network.train_with(problem_set, epochs, 0.3,1)
 analyze_set = neural_network.predict(problem_set2)
 analyze_set.hoped_precision = 0.0001
 histogramme = analyze_set.precision_histogram()
