@@ -1,6 +1,7 @@
 from package_name.dataset import dataset
 from package_name.NeuralNetwork import nn
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
 ### Creating the data
 # data = problem_generator(['petit_probleme.lp'], 100000, 0.1, [23, 24, 25])
@@ -8,16 +9,17 @@ problem_set_for_training = dataset("petits_problemes_N100-000_dev0.1")
 problem_set_for_evaluation = problem_set_for_training.cut(0.2)
 
 ### Creating the Neural Network
-
 layers_list, last_activation, epochs, neural_network = [4], None, 20, nn()
 neural_network.basic_nn(layers_list, last_activation)
 neural_network.set_loss("mean_absolute_percentage_error")
 neural_network.set_metrics(["mean_absolute_percentage_error"])
-neural_network.set_optimizer("Adam")
+# opt = tf.keras.optimizers.Nadam(learning_rate=0.001, beta_1=0.999, beta_2=0.9999, epsilon=1e-10, name='Nadam')
+# neural_network.set_optimizer(opt) # adjust parameter of Adam
+neural_network.set_optimizer("Adam") # defaut optimiser Adam
 neural_network.add_processing_linear_mean()
 
 ### Training the neural network
-training_data = neural_network.train_with(problem_set_for_training, epochs, 0.1,1)
+training_data = neural_network.train_with(problem_set_for_training, epochs, 0.1, 1)
 
 ### Evaluating the neural network
 evaluation_data = neural_network.predict(problem_set_for_evaluation)
