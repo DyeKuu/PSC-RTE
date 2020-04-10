@@ -65,3 +65,19 @@ class to_analyze:
 
     def get_predictions(self):
         return self.predictions
+    
+    # Plot mean_absolute_percentage_error of validation set and training set
+    def history_histogram(self):
+        loss = self.history.history['mean_absolute_percentage_error']
+        val_loss = self.history.history['val_mean_absolute_percentage_error']
+        for i in range(len(loss)):
+            loss[i] = loss[i]/100
+            val_loss[i] = val_loss[i]/100
+        plt.plot(np.log10(loss), label='testing data')
+        plt.plot(np.log10(val_loss), label='validation data')
+        plt.title('The mean absolute percentage error history of the model')
+        plt.ylabel('log(value)')
+        plt.xlabel('No. epoch')
+        plt.legend(loc="upper left")
+        plt.show()
+
