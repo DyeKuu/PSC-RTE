@@ -1,0 +1,795 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[latin1]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb} 
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{sectsty}
+\usepackage{slashbox}
+\usepackage{chngpage}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric}
+\newcommand{\warningsign}{\tikz[baseline=-.75ex] \node[shape=regular polygon, regular polygon sides=3, inner sep=0pt, draw, thick] {\textbf{!}};}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\makeatletter\@addtoreset{section}{part}\makeatother
+
+\setcounter{tocdepth}{1}
+\begin{document}
+
+\begin{titlepage}
+	\begin{center}
+	
+	\LARGE PSC - Rapport final\\	
+	\vspace{1cm}	
+	
+	\begin{figure}[htp]
+	\begin{center}
+	\includegraphics[scale=0.16]{./logo_X}   \hspace{25 mm}
+	\includegraphics[scale=0.11]{./logo_RTE}   
+
+	\end{center}
+	\end{figure}
+	
+	\vspace{2cm}	
+
+	
+	\rule{\linewidth}{.5pt}\\
+	\vspace{0.1 cm}
+	\huge{\textbf{INF09\\
+	Apport du machine learning pour la résolution approchée de problèmes d'optimisation linéaire}}\\
+	\rule{\linewidth}{.5pt}\\
+	\vspace{3cm}%
+	\LARGE Eulalie Creusé - Étienne Maeght - Yiming Qin\\
+	\LARGE Arthur Schichl - Kunhao Zheng\\
+	\vspace{1cm}
+	\noindent \underline{Tuteur :} M. Manuel Ruiz\\
+	\noindent \underline{Coordinateur :} M. Emmanuel Haucourt
+	\normalfont\vfill
+	\end{center}
+	\hfill \Large 2019-2020\par\vspace{0.5cm}%
+\end{titlepage}
+
+\setcounter{tocdepth}{2}
+\setlength\parindent{1cm}
+\newpage
+\tableofcontents
+\newpage
+
+\renewcommand{\partname}{}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+
+Les problèmes d'optimisation linéaire consistent à minimiser une forme linéaire sous con-traintes linéaires. Pour la publication annuelle du bilan prévisionnel, RTE réalise des études sur l'équilibre offre-demande du système électrique. Des simulations permettent de générer 52000 variantes d'un système électrique, qui sont des programmes linéaires où seul le second membre des contraintes changent, la matrice décrivant les coefficients des contraintes restant la même. La matrice et les seconds membres correspondent à des hypothèses qui sont gardées confidentielles par l'entreprise.\\
+\indent Le projet proposé par RTE est d'évaluer avec quelle précision le machine learning peut résoudre des problèmes d'optimisation linéaires, dont on sait aujourd'hui déjà déterminer les solutions de manière exacte. Si l'erreur obtenue via un réseau de neurones s'avérait suffisamment faible, plusieurs applications pourraient en découler, comme par exemple un pré-traitement des données permettant de discriminer des cas aberrants dont la résolution exacte est inutile. L'objectif proposé par le tuteur était donc de développer un programme précis en tirant parti des spécificités du problème (seuls les seconds membres changent), capable de deviner des solutions approchées avec une erreur relative moyenne de l'ordre de $10^{-6}$.\\
+
+
+\indent Ce travail, au-delà de son intérêt pratique présenté ci-dessus, a été riche en enseignements pour les étudiants. Le groupe acquis une bonne connaissance du fonctionnement théorique et pratique d'un réseau de neurones. Le projet a également nécessité la prise en main de nombreux logiciels, packages ou IDE : CPLEX, tensorflow, pycharm, ...\\
+\indent Du point de vue des relations humaines, les membres du groupe ont progressé dans leur façon de communiquer et de s'organiser. Une répartition claire des tâches, ainsi que des échanges structurés, se sont avérés êtres des éléments indispensables à la bonne conduite du projet.\\
+
+Un extrait du code est disponible en annexe \ref{code}, l'ensemble est disponible à cette adresse : https://drive.google.com/drive/folders/1RgEEd41dkrp5DplwTxyDodESN\_PhvYxo
+
+\newpage
+
+\section{Analyse de l'état de l'art et rapide présentation de quelques notions utiles}
+\subsection{Vue générale}
+
+L'optimisation linéaire constitue un sous-domaine important du domaine mathématique de l'optimisation. Apparue au milieu du XXème siècle avec les premiers ordinateurs, cette branche des  mathématiques s'intéresse à la recherche des minima d'une fonction linéaire sur un polyèdre convexe. De nos jours, de nombreux algorithmes analytiques capables de résoudre de tels problèmes de manière exacte ont été élaborés.\\
+\indent Parmi ceux-ci, l'algorithme du simplexe, qui fournit une solution exacte à tout problème d'optimisation linéaire résoluble en un nombre fini d'opérations, constitue l'un des plus utilisés. Il s'agit d'ailleurs de celui dont l'entreprise RTE se sert pour le moment dans l'optimisation du coût de la distribution de l'électricité.\\
+
+L'IA, quant à elle, est un "ensemble de théories et de techniques mises en oeuvre en vue de réaliser des machines capables de simuler l'intelligence humaine" (Larousse). L'apprentissage automatique, ou machine learning, est un champ d'étude de l'intelligence artificielle qui consiste en l'implémentation informatique de méthodes basées sur l'exploitation de données. C'est une méthode particulièrement bien adaptée aux situations où les ensembles de données à traiter sont très importants. En effet, bien que les algorithmes de machine learning ne puissent pas assurer une précision parfaite -contrairement à leur équivalents analytiques - et se contentent de fournir des solutions approximatives ils permettent souvent de diminuer le temps de résolution de manière considérable.\\
+
+	Au sein du domaine de l'apprentissage automatique, plusieurs méthodes complémentaires, dont chacune est adaptée à la résolution d'un type de problèmes particulier, peuvent être mises en évidence. Ainsi, dans le domaine de l'apprentissage automatique supervisé, la méthode de la régression linéaire, qui occupe une position primordiale dans de nombreuses branches des mathématiques appliquées, constitue un exemple incontournable d'algorithme de résolution de problèmes de régression. La régression logistique, quant à elle, représente un outil efficace pour la résolution de problèmes de caractérisation régis par un nombre raisonnable de paramètres. On pourrait citer d'autres méthodes, notamment dans le domaine de l'apprentissage non supervisé, mais elles dépassent les objectifs de ce travail.\\
+
+\indent Alors que que ces méthodes sont très efficaces lorsque l'espace de départ est de faible dimension, leur complexité explose en général lorsque celle-ci croit. Une méthode très en vogue pour aborder les problèmes aux données de plus en plus abondantes des dernières année est la mise en place de réseaux de neurones, qui unissent efficacité et simplicité algorithmique.\\
+\indent Étant donné que les données fournies au groupe se présentent sous la forme de vecteurs à grande dimension, il a privilégié - avec la confirmation du tuteur - l'approche des réseaux de neurones parmi les méthodes d'apprentissage automatique présentées ci-dessus.
+
+
+\subsection{Méthode du simplex}
+
+Des méthodes de résolution exactes en temps fini ont été élaborées pour les problèmes d'optimisation linéaire. Celles-ci s'appuient sur le principe de l'algorithme du simplex, déjà évoqué plus haut et dont on décrit ici le principe général.\\
+
+Cet algorithme se base sur deux lemmes fondamentaux de l'optimisation convexe. Le premier énonce que tout minimum local d'une fonction convexe définie sur un ensemble convexe est aussi un minimum global. Le deuxième dit que toute fonction concave définie sur un sous-ensemble convexe fermé d'un espace vectoriel de dimension finie, atteint sa valeur minimale en un point extrémal de cet ensemble.\\
+\indent Dans le cas particulier d'un problème d'optimisation linéaire, on recherche le minimum d'une fonction objectif $f$ linéaire - donc convexe et concave - sur un polyèdre $K$ fermé, convexe en tant qu'intersection d'ensembles convexes. Or les points extrémaux de celui-ci sont exactement ses sommets. D'après les lemmes énoncés précédemment, il suffit donc de parcourir les sommets de $K$ jusqu'à ce que l'on atteigne un minimum local de $f$, qui sera forcément aussi un minimum global.\\
+\indent Ainsi, l'algorithme du simplex est un algorithme itératif qui détermine et parcourt les sommets du polyèdre du définition au fur et à mesure, tout en veillant à ce que la valeur de la fonction objectif décroisse au cours des itérations.\\
+\indent Il détermine si le problème d'optimisation linéaire considéré est résoluble, et présente l'énorme avantage de converger sûrement et en temps fini. Un inconvénient de cet algorithme est cependant que cette convergence est potentiellement très lente ; il présente une complexité exponentielle en le nombre $n+m$, où $n$ est le nombre de variables et $m$ le nombre de contraintes du problème d'optimisation, dans le pire des cas. \\
+\indent Toutefois, sa complexité moyenne en $O((n+m)^3)$ est tout à fait raisonnable, et par le mécanisme du "warm-start" l'algorithme est particulièrement efficace dans la résolution de problèmes d'optimisation dont les paramètres sont proches de ceux de problèmes déjà résolus. C'est notamment cette propriété qui lui permet de maintenir sa compétitivité face à d'autres algorithmes d'optimisation exactes à complexité polynomiale, comme la méthode de points intérieurs.
+
+\subsection{Fonctionnement d'un réseau de neurones}
+\label{fonctionnement_réseau}
+
+Le fonctionnement du réseau à l'échelle d'un neurone est décrit figure \ref{neurone}.
+
+
+\begin{figure}[H]
+\begin{center}
+\rotatebox{0}{
+\includegraphics[scale=0.2]{neurone.png} } 
+\caption{Structure d'un neurone artificiel (source image : Wikipédia).}
+\label{neurone}
+\end{center}
+\end{figure}
+
+Le neurone effectue une combinaison linéaire de ses entrées, et fait passer le résultat par une "fonction d'activation" qui introduit une non-linéarité dans le calcul. Quelques fonctions classiques d'activation sont la sigmoïde - $f(x) = \frac{1}{1+e^{-x}}$ -, le relu - $f(x) = max(0,x) $ - et la fonction indicatrice de $\mathbb{R}^+$.\\
+Le neurone est donc défini par les valeurs de ses coefficients de pondération et sa fonction d'activation.\\
+
+
+Le réseau global est généralement constitué de couches successives de neurones, un neurone de la couche $i$ prenant en entrée les sorties de la couche $i-1$ et transmettant sa réponse aux neurones de la couche $i+1$. Une illustration est donnée figure \ref{couches}.
+
+\begin{figure}[H]
+\begin{center}
+\rotatebox{0}{
+\includegraphics[scale=0.18]{couches.png} } 
+\caption{Vue simplifiée d'un réseau de neurones (source image : Wikipédia).}
+\label{couches}
+\end{center}
+\end{figure}
+
+Le réseau prend donc une entrée et calcule couche par couche les fonctions des neurones, jusqu'à la sortie.\\
+\indent L'apprentissage consiste à faire passer les exemples d'entraînement dans le réseau, à comparer la réponse obtenue avec la réponse attendue, et à ajuster en conséquence les différents paramètres des neurones : c'est la "backpropagation" de l'information, qui est en pratique basée sur une descente de gradient.\\
+
+
+
+Les réseaux de neurones sont de plus en plus utilisés dans des problèmes de classification ou de régression, mais ils présentent néanmoins 3 grandes limites :
+\begin{itemize}
+\item Les solutions rendues restent approchées et le réseau peut se tromper.
+\item Pour ajuster les coefficients du réseau, il faut énormément de données d'entraînement. Il n'est pas toujours facile de réunir suffisamment d'exemples réels.
+\item On reproche également aux réseaux d'être des boîtes noires : l'optimisation des poids des neurones se fait automatiquement et est illisible pour le programmeur comme pour l'utilisateur. Le programme n'est pas capable d'"expliquer" ses résultats, ce qui rend les erreurs parfois difficiles à analyser ou à limiter.\\
+\end{itemize}
+
+
+\subsection{Descente de gradient stochastique et Adaptative moment estimation}
+\label{sgd_VS_adam}
+
+
+Un défi majeur dans le domaine de l'intelligence artificielle est la mise au point de bons algorithmes de "backpropagation", en cherchant un bon compromis entre stabilité et rapidité. Comme dit plus haut, les algorithmes itératifs de type descente de gradient constituent l'approche classique pour l'optimisation d'un réseau. Cette sous-partie est consacrée à la présentation de deux exemples particulièrement connus de tels algorithmes, que le groupe a rencontré lors de son projet.\\
+
+\textbf{Descente de gradient stochastique}. Cet algorithme a longtemps régné sur le monde de l'intelligence artificielle, il a été conçu pour la résolution de problèmes d'optimisation de grande dimension. Au niveau du code, cet algorithme est très proche de celui de la descente de gradient à pas fixe, et pourtant leurs comportements diffèrent nettement.\\
+\indent Il est adapté pour l'optimisation de fonctions de la forme particulière $f(x) = \sum_{i=0}^{n} f_{i}(x)$, notamment lorsque cette somme comporte un grand nombre de termes, propriété généralement vérifiée par les fonctions coûts de réseaux de neurones. À chaque étape de l'exécution, un sous-ensemble $J$ de taille donné $m$ (aussi appelée "batch size") de l'ensemble $ I = {0,n} $ des indices de la somme est choisi de manière aléatoire selon une loi uniforme. En général, on choisit $m=1$. Ensuite, l'algorithme calcule le gradient de $\sum_{i \in J}^{n} f_{i}(x)$ qui sera soustrait aux paramètres du réseau après multiplication avec le pas fixe $\eta$ (aussi appelé "learning rate" de l'algorithme). Cette dimension aléatoire fait la différence entre la descente de gradient stochastique et la descente de gradient classique, qui demande le calcul du gradient de $f$ tout entière à chaque étape.\\
+\indent La descente de gradient stochastique nécessite ainsi nettement moins de calculs par étape, mais converge aussi plus lentement que la descente de gradient classique. Elle est aussi moins stable et demande des hypothèses plus fortes pour assurer sa convergence, notamment une diminution suffisamment rapide du pas $\eta$ au cours des itérations. Or comme décrit dans ce qui précède, une telle diminution n'est pas implémentée de base dans la plupart des librairies python, dont \textbf{tensorflow} - même si elle peut être configurée manuellement par la donnée d'un "callback" (voir ce qui suit) lors de l'entraînement du réseau de neurones. De manière générale, l'algorithme implémenté oscille donc indéfiniment autour d'un minimum local à partir d'un certain rang, sans ne plus augmenter en précision, et cette précision sera d'autant plus faible que $\eta$ est élevé. Il s'agit alors encore de trouver un bon compromis entre rapidité et précision.\\
+\indent Comme expliqué en partie \ref{boite_noire}, pendant un certain temps le groupe a eu des difficultés à augmenter la précision de ses réseaux au-delà de $10^{-2}$, notamment à cause d'un calibrage par défaut peu avantageux de la learning rate par \textbf{tensorflow}.\\
+\indent Malgré ces inconvénients, il s'agit d'un algorithme généralement efficace et relativement fiable pour l'optimisation de réseaux.\\
+	
+
+\textbf{Adaptative moment estimation (Adam)}. Depuis leur élaboration en 2014, Adam et l'algorithme dérivé Adamax sont les optimiseurs standards dans le domaine des réseaux de neurones.\\
+\indent Adam est également un algorithme de type descente de gradient basé sur la descente de gradient stochastique, mais diffère de celle-ci dans la façon d'actualiser des paramètres à la fin de chaque itération. D'une part, $J = {i}$ est toujours choisi de cardinal $1$ à chaque étape. D'autre part, les paramètres du réseau ne sont pas actualisés par la simple soustraction du gradient de $f_{i}$, mais par celle d'un vecteur déterminé de manière non élémentaire à partir de tous les directions d'actualisation de l'ensemble des étapes précédentes (le vecteur dépend d'estimateurs des moments du premier et du deuxième ordre de ces gradients stochastiques) multiplié avec le pas $\eta$.\\
+\indent Adam excelle grâce une convergence théorique plus rapide que la simple descente de gradient stochastique, supériorité qui croit avec la dimension ; et grâce à une stabilité sous des conditions moins restrictives. Sa performance est nettement meilleure en pratique que celle de tous ses concurrents au sein du domaine de l'intelligence artificielle. Néanmoins, pour $\eta$ fixé, cet algorithme présente le même inconvénient que la descente de gradient stochastique, i.e. qu'il ne peut pas atteindre une précision arbitrairement petite.\\
+\indent Cependant, en passant de la descente de gradient stochastique à Adam, le groupe est parvenu - même avant la donnée d'un callback réglant la taille du pas en fonction de l'itération - à augmenter la précision de ses réseaux d'un facteur 100 tout en diminuant le temps d'entraînement.\\
+
+Enfin, comme évoqué ci-dessus, la performance des algorithmes présentés précédemment, implémentés par défaut avec une learning rate fixe, peut encore être nettement améliorée par la donnée en callback d'une fonction associant à chaque itération une taille de pas et permettant ainsi de lancer ces algorithmes avec des learning rates variables au cours du temps. De manière générale, lorsque la précision de la solution fournie par l'algorithme n'augmente plus pendant plusieurs itérations, cela est dû à une learning rate trop élevée. Cette fonction est donc souvent décroissante, même si des sauts de temps en temps peuvent être intéressants pour échapper à des minima locaux non optimaux. Elle doit néanmoins être déterminée empiriquement pour chaque problème.\\
+\indent Cette dernière méthode a permis au groupe d'augmenter encore la précision atteinte.
+
+
+
+\newpage
+\section{Organisation du travail}
+\subsection{Communication au sein du groupe et avec le tuteur}
+
+Le groupe s'est réuni chaque mercredi après-midi pendant environ une heure, pour une réunion dont l'ordre du jour était défini à l'avance. Selon les besoins, cette réunion était l'occasion de se tenir au courant des avancées des autres membres du groupe et/ou de coder un morceau précis du programme ensemble. Les tâches à effectuer au cours de la semaine suivante étaient définies en fin de réunion. Des comptes-rendus ont régulièrement été produits.\\
+\indent Ces réunions ont également permis des temps d'échanges avec le tuteur par visioconférence, surtout au début du projet. Le groupe s'est déplacé deux fois à la Défense dans les locaux de RTE pour avoir des discussions plus approfondies avec M. Ruiz.\\
+
+La communication a plus globalement été assurée grâce à plusieurs méthodes complémentaires, dont un dossier Google Drive et un dossier GitHub pour le dépôt des codes.\\
+\indent Le groupe a malgré tout rencontré plusieurs difficultés de communication. Il a notamment tardé à comprendre précisément ce que RTE attendait de lui, problème qui s'est résolu de lui-même après quelques entretiens avec le tuteur. Quelques tensions ont parfois émergé au sein même du groupe et ces dernières ont été résolues en laissant chacun s'exprimer sur ses ressentis, afin de réajuster les objectifs et la répartition des rôles. Cette méthode, rencontrée pour la première fois en coaching PSC, a régulièrement été utilisée au cours de l'année.
+
+\subsection{Répartition des tâches au sein du groupe}
+
+Le groupe a également produit un diagramme de Gantt en coaching PSC, qui a permis une meilleure répartition des tâches de rédaction et de documentation au sein du groupe. Il s'est révélé moins utile pour la phase de programmation, pour laquelle il n'est pas facile de faire une liste exhaustive des étapes et le temps à y consacrer. Un aperçu est visible en annexe \ref{diagramme_gantt}.\\
+
+Au cours de l'année, le groupe a pris l'habitude de se scinder en sous-groupes pour avancer plus rapidement sur des parties précises du projet.\\
+\indent La plupart des classes (et les méthodes associées) ont été assignées à un monôme ou un binôme précis. Ces spécificités sont restées suffisamment limitées pour que l'ensemble du groupe comprenne l'ensemble des codes et leur fonctionnement.\\
+\indent D'autres tâches, ne consistant pas directement en la programmation du code, ont été réparties entre les membres du groupe. Kunhao a documenté les fonctions utiles déjà existantes dans diverses libraires, Etienne a veillé à la clarté du code et la mise en fonction systématique du travail, Eulalie a organisé le travail de rédaction des divers rapports, et Yiming et Arthur ont étudié un peu plus en détails le fonctionnement théorique des réseaux de neurones et des régressions linéaires.
+
+
+
+\subsection{Choix de l'environnement de développement}
+
+Pour le projet, les librairies suivantes ont été importées :
+\vspace{0.2cm}
+\begin{itemize}
+\item \textbf{cplex} : pour résoudre les problèmes d'optimisation linéaire.
+\item \textbf{tensorflow} : un outil d'apprentissage recommandé par le tuteur, qui permet de construire et d'utiliser des réseaux de neurones.
+\item \textbf{numpy} : pour le formatage des données en array.
+\item \textbf{matplotlib} : pour l'affichage des résultats.\\
+\end{itemize}
+
+Différents environnements de développement ont été utilisés, dont \textbf{Pycharm}, \textbf{Spyder} et \textbf{Jupyter Notebook}.
+
+\newpage
+
+\section{Jeux de données}
+\subsection{Encodage des problèmes d'optimisation linéaire}
+
+Les problèmes d'optimisation linéaire CPLEX sont généralement stockées sous les formats .lp ou .mps.\\
+
+\begin{figure}[H]
+\begin{center}
+\rotatebox{0}{
+\includegraphics[scale=0.75]{LP_example.png} } 
+\caption{Fichier LP utilisé pour le projet.}
+\label{LP_example}
+\end{center}
+\end{figure}
+
+Le groupe a utilisé un "petit" fichier LP (trois contraintes variables parmi une trentaine de contraintes) pour mettre au point ses codes, visible figure \ref{LP_example}. La solution à ce problème est 60336.\\
+\indent Plus d'informations sur les formats .lp et .mps sont disponibles sur les sites internet cités dans la bibliographie.
+
+\subsection{Contribution du partenaire}
+
+M. Ruiz a fourni au groupe 1040 "gros" problèmes, similaires à ceux réellement utilisés par RTE, sous format .mps. Ces-derniers sont constitués d'environ 100 000 contraintes. Parmi ces dernières, 84\% sont fixes et 95\% varient dans un intervalle de taille inférieure à 10.\\
+\indent Les solutions de ces problèmes sont de l'ordre de $10^8-10^9$. Obtenir une précision relative de l'ordre de $10^{-6}$ signifie donc estimer la solution en se trompant au plus d'environ 100 ou 1000.
+
+\subsection{Génération et traitement des données}
+
+Une des caractéristiques du machine learning est l'apprentissage sur un grand  nombre d'exemples. Plus l'on fournit de problèmes déjà résolus au programme, plus l'on peut s'attendre à de bonnes prédictions ; et plus le problème est compliqué, plus il faut d'exemples pour que l'algorithme renvoie des résultats satisfaisants. Dans notre cas, 1 exemple pour 3 contraintes variables et 1040 exemples pour environ 10 000 contraintes variables étaient largement insuffisants. \\
+\indent La première étape du travail a donc été la génération et la résolution de nouveaux problèmes à partir de ceux fournis par RTE. La méthode employée et son implémentation sont détaillées dans les deux parties suivantes.
+
+\newpage
+\section{Grandes étapes du projet}
+\subsection{Phases chronologiques}
+
+L'organisation temporelle du projet sur l'année est découpée en trois phases principales.\\
+\indent La première a consisté en la prise en main des différents outils. Le groupe a donc appris ce qu'est un réseau de neurones, comment l'implémenter en Python, ou encore comment utiliser certains packages spécifiques comme Tensorflow ou CPLEX. Il a ensuite codé quelques premiers réseaux de neurones et réfléchi aux paramètres à modifier et outils à utiliser afin d'analyser puis améliorer leurs performances.\\
+\indent Dans un second temps, le groupe a clarifié la procédure à suivre pour répondre au problème posé par RTE et l'a implémentée. Plus de détails sont donnés dans la suite. Pour des questions de simplicité et de capacité de calcul des ordinateurs, le groupe a utilisé le petit problème plutôt que les problèmes réels, trop gros pour être facilement maniables.\\
+\indent Enfin, le groupe a obtenu la fameuse précision relative de $10^{-6}$ demandée par le tuteur, toujours sur le petit problème, après avoir rencontré plusieurs difficultés précisées dans la suite.\\
+
+\subsection{Procédure finale retenue}
+
+Un schéma explicatif de la procédure finale retenue est donné figure \ref{schema_bilan}.\\
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.65]{schema_bilan.png} 
+\caption{Schéma donnant les grandes étapes de la procédure retenue.}
+\label{schema_bilan}
+\end{center}
+\end{figure}
+
+
+\indent La première étape consiste à générer de nouveaux problèmes à partir de ceux fournis par M. Ruiz, et à les pré-traiter pour leur utilisation par le réseau de neurones. Une des spécificités du jeu de données utilisé par RTE est que chaque problème partage la même matrice $A$, il suffit donc de générer de nouveaux seconds membres. Le groupe a décidé d'ajouter un bruit gaussien de variance donnée par l'utilisateur aux problèmes déjà existants. Par exemple, la valeur par défaut pour l'étude du petit problème était de $0,1$. La résolution a été effectuée avec le package CPLEX. Le pré-traitement inclu ensuite notamment la troncature des contraintes fixes, pour gagner en temps de calcul et simplifier le travail du réseau de neurones, et diverses normalisations.\\
+
+
+Ensuite, à partir de ces données, il faut coder et entraîner un réseau de neurones. Dans cette partie, le groupe a utilisé des fonctions déjà codées dans le package tensorflow, mais a codé un ensemble de méthodes permettant d'automatiser la création de réseaux de neurones à partir de quelques paramètres essentiels et de gérer les compatibilités de format des données.\\
+
+
+Enfin, dans une troisième et dernière étape, il faut évaluer les performances du réseau de neurones ainsi obtenu. Le groupe a préféré analyser les performances avec des fonctions et des affichages qu'il a lui-même programmés, le package tensorflow étant parfois un peu opaque.\\
+
+
+Les étapes 2 et 3 sont pensées pour être répétées plusieurs fois, afin d'estimer quel degré de précision on peut attendre d'un réseau de neurones en fonction du nombre de problèmes qui lui ont été donnés pour s'entraîner.\\
+\indent L'implémentation de ces 3 grandes étapes est expliquée en détails dans la partie suivante.\\
+
+\newpage
+\section{Structure et fonctionnement du code}
+
+Le PSC a duré sur plusieurs mois et a fait intervenir un certain nombre d'acteurs. Il a donc nécessité un travail de planification important, en particulier en ce qui concerne la définition et la répartition des tâches liées à la conception de ce qui constitue le noyau du travail présenté dans ce document : le code.\\
+\indent Les prochains paragraphes seront consacrés à la présentation des classes qui constituent en quelque sorte le squelette de notre code et de leurs fonctionnalités, complétant ainsi le descriptif initié figure \ref{schema_bilan}.\\
+\indent La présentation qui suit s'appuie sur la figure \ref{schema_bilan_code} qui précise l'implémentation du code.
+
+
+\subsection{1\up{ère} étape : la génération de données}
+\label{generator}
+
+	Au sein du code, la génération de nouveaux problèmes d'optimisation linéaire à partir d'anciens problèmes fournis par RTE est assurée par la classe \textbf{lin\_opt\_pbs}.\\
+\indent L'objectif principal de celle-ci est de permettre à l'utilisateur (supposé n'avoir aucune familiarité avec les détails du code) de générer N nouveaux problèmes d'optimisation linéaire de manière aléatoire à partir d'une liste de problèmes déjà connus, où N est choisi par l'utilisateur.\\
+\indent Pour parvenir à cette fin, le programme parcourt les second membres des problèmes d'optimisation de la liste fournie en entrée, détermine les indices des coefficients invariants d'un problème à l'autre, choisit un problème de la liste au hasard et ajoute un bruit gaussien aux coefficients qui n'ont pas été retenus auparavant.\\
+
+\indent Ainsi, une instance de la classe \textbf{lin\_opt\_pbs} comporte 4 champs :
+\begin{itemize}
+\item \textbf{name\_list} : une liste de noms de problèmes d'optimisation linéaires (éventuellement des fichiers qui les contiennent).
+\item \textbf{prob\_list} : une liste de problèmes d'optimisation linéaires.
+\item \textbf{dev} : la déviation standard relative du bruit gaussien ajouté aux coefficients variables des seconds membres lors de la génération de nouvelles données.
+\item \textbf{non\_fixed\_vars} : une liste contenant les indices des coefficients des seconds membres qui changent au sein de la liste \textbf{prob\_list}.\\
+\end{itemize}
+
+
+\indent La fonction phare de la classe qui se charge de la génération de données est la fonction \textbf{problem\_generator}. Celle-ci prend 4 arguments :
+
+\begin{itemize}
+\item \textbf{problems} : une liste de noms de fichiers contenant des problèmes d'optimisation linéaires (string list).
+\item \textbf{N} : nombre de problèmes à générer (int).
+\item \textbf{dev} : voir champ \textbf{dev} de \textbf{lin\_opt\_pbs} (float).
+\item \textbf{non\_fixed\_vars} \textit{(champ optionnel)} : voir champ \textbf{non\_fixed\_vars} de \textbf{lin\_opt\_pbs} (int list).
+\item \textbf{path} \textit{(champ optionnel)} : le chemin pour accéder aux données (string). Par défaut le programme cherche les données dans le même dossier que le fichier \textbf{generator.py}.\\
+\end{itemize}
+
+\indent Par l'intermédiaire des méthodes de \textbf{lin\_opt\_pbs}, \textbf{problem\_generator} génère N problèmes d'après le principe détaillé plus haut, à partir d'une liste de K problèmes donnée en entrée. Enfin, après avoir déterminé les solutions exactes des problèmes générés, la fonction ne retient que les informations utiles dans la suite, i.e. la liste des seconds membres des N problèmes d'optimisation linéaires générés, tronqués aux coefficients qui varient d'un problème à l'autre, ainsi que la liste de leurs solutions respectives. Ces dernières sont renvoyés par \textbf{problem\_generator} sous la forme d'une instance de la classe \textbf{dataset}, qui sera présentée dans la partie suivante.
+
+
+\subsection{2\up{ème} étape : Entraînement d'un réseau de neurones}
+
+	À la différence de l'étape de la génération de données, la partie du code consacrée à l'entraînement d'un réseau de neurones à la résolution de problèmes d'optimisation linéaires est composée de plusieurs classes.\\
+
+	D'abord, le pré-traitement et la mise en forme des données avant leur utilisation par un réseau de neurones est assuré par trois classes : \textbf{RHS} (pour "Right-Hand Side"), \textbf{solutions} et \textbf{dataset}.\\
+\indent \textbf{RHS} et \textbf{solutions} représentent respectivement une liste de seconds membres de problèmes d'optimisation linéaires (évidemment tronqués aux coefficients variables) et une liste de solutions exactes de tels problèmes.\\
+\indent Les objets de la classe \textbf{dataset} correspondent à un jeu de données exploitable par un réseau de neurones. Ils sont déterminés par deux champs :
+\begin{itemize}
+\item \textbf{RHS} : une liste de RHS de problèmes d'optimisation linéaires (instance de \textbf{RHS}).
+\item \textbf{solutions} : une liste de solutions de problèmes d'optimisation linéaires (instance de \textbf{solutions}).
+\end{itemize}
+
+\indent Le constructeur de \textbf{dataset} veille en outre à ce que ces deux listes soient bien de la même longueur, car elles sont censées représenter les RHS et les solutions respectives d'une liste de problèmes d'optimisation.\\
+
+La classe \textbf{dataset} comporte une large gamme de méthodes de mise en forme des données : recherche du maximum ou du minimum, ajout d'une constante, fonctions standards \textbf{tensorflow}, transformations linéaires, ... Elle comporte également une méthode \textbf{cut}, qui permet de diviser un jeu de données en deux jeux plus petits, et une méthode \textbf{merge}, qui prend deux jeux de données et les fusionne.\\
+\indent Quelques fonctions de visualisation et de sauvegarde des données ont également été codées.\\
+ 
+	La plus importante des classes intervenant dans la 2\up{ème} étape est sans doute la classe \textbf{nn}. Une instance de la classe \textbf{nn} comporte 8 champs :\\
+
+\begin{itemize}
+\item \textbf{model} : objet représentant le réseau dans \textbf{tensorflow} (instance de \textbf{tf.keras.Model}).
+\item \textbf{loss} : fonction devant être optimisée par le réseau de neurones (string donnant le nom d'une des classes de \textbf{tf.keras.losses}).
+\item \textbf{optimizer} : procédure utilisée pour l'optimisation du réseau (string donnant le nom d'une des classes de \textbf{tf.keras.optimizers}).
+\item \textbf{metrics} : fonctions sur lesquelles la performance du réseau doit être évaluée (liste de string donnant le nom de classes de \textbf{tf.keras.metrics}).
+\item \textbf{is\_compiled} : indique si le réseau a déjà été compilé (booléen).
+\item \textbf{file\_name} : nom sous lequelle enregistrer le réseau (string, par défaut None).
+\item \textbf{pre\_processing} : informations utilisées en interne par la classe \textbf{nn} pour le pré-traitement des données (liste de string et d'int).
+\item \textbf{factor} : informations utilisées en interne par la classe \textbf{nn} pour le pré-traitement des données (int).\\
+\end{itemize}
+
+Les méthodes de cette classe se basent sur les méthodes de l'outil d'apprentissage automatique \textbf{tensorflow}. Elles englobent notamment :
+\begin{itemize}
+\item \textbf{basic\_nn}, qui prend en entrée une liste L  d'entiers et construit un nouveau réseau, contenant autant de couches que L contient d'éléments, tel que les éléments de L codent respectivement le nombre de neurones des différentes couches construites. La fonction permet également l'ajout d'une dernière couche d'activation (optionnel).
+\item \textbf{train\_with}, à laquelle on fournit une instance de \textbf{dataset} pour entraîner le réseau de neurones considéré. \textbf{train\_with} effectue un pré-traitement et un post-traitement du dataset en exploitant les deux champs \textbf{pre\_processing} et \textbf{factor} du réseau de neurones. La fonction fixe également les valeurs des constantes qui seront utilisées pour le traitement des données d'évaluation.
+\item \textbf{predict}, qui s'applique à un réseau de neurones déjà entraîné. Elle prend comme argument une instance de \textbf{dataset}, et évalue le réseau sur ces données, en les pré-traitant et post-traitant conformément aux instructions contenues dans les champs \textbf{pre\_processing} et \textbf{factor} du réseau de neurones. La méthode retourne les solutions prédites et les solutions exactes des problèmes d'optimisation linéaires fournies en entrée sous forme d'une instance de la classe \textbf{to\_analyse}, dont la présentation fait l'objet du prochain paragraphe.\\
+\end{itemize}
+
+\indent Pour améliorer cette classe et construire plus facilement un réseau de neurones \textit{performant}, le groupe a essayé d'utiliser \textbf{hyperas}, comme détaillé en partie \ref{hyperas}.
+
+	
+\subsection{3\up{ème} étape : Analyse des données}
+
+	L'analyse de la performance d'un réseau de neurones, qui constitue la dernière grande étape du travail de programmation, est assurée par l'intermédiaire de la classe\textbf{ to\_analyse}.\\
+\indent L'objectif de celle-ci est de réunir une liste de solutions théoriques de problèmes d'optimisation linéaires et la liste de leurs solutions approximatives respectives, calculées par le réseau de neurones, pour ainsi pouvoir étudier notamment la précision du réseau.\\
+
+Parmi les champs de la classe, on trouvera donc :
+\begin{itemize}
+\item \textbf{solutions} : le vecteur des solutions théoriques d'une liste de problèmes d'optimisations linéaires (np.ndarray).
+\item \textbf{predictions} : le vecteur des solutions calculées par un réseau de neurones de ces mêmes problèmes (np.ndarray).
+\item \textbf{hoped\_precision} : la précision relative qu'on cherche à atteindre avec le réseau (float, 10\up{-6} par défaut).
+\item \textbf{size} : le nombre de problèmes d'évaluation (int).
+\item \textbf{used\_nn} : le réseau de neurones utilisé pour faire les prédictions (instance de la classe \textbf{nn}).\\
+\end{itemize}
+
+Pour représenter la performance du réseau, \textbf{to\_analyse} dispose de plusieurs méthodes, allant du simple calcul de l'erreur quadratique moyenne par \textbf{mean\_squared\_error} à la représentation de la répartition des précisions relatives des prédictions du réseau de neurones sous la forme d'un histogramme.\\
+\indent L'erreur relative est calculée comme suit :
+$$relative\_precision(solution \ S, prediction \ P) = \Big| \frac{P - S}{S} \Big|$$
+\indent Le groupe a préféré éviter autant que possible le recours à \textbf{tensorflow} pour cette phase d'analyse des résultats, l'outil d'apprentissage automatique restant assez opaque. Des précisions sont apportées en partie \ref{boite_noire}.
+
+
+\newpage
+\begin{figure}[H]
+\begin{center}
+\rotatebox{90}{
+\includegraphics[scale=0.95]{schema_bilan_code.png} } 
+\caption{Schéma récapitulant l'implémentation de la phase 2.}
+\label{schema_bilan_code}
+\end{center}
+\end{figure}
+
+\newpage
+\section{Difficultés rencontrées}
+\subsection{Structuration et mise en page du code}
+
+Une des premières difficultés rencontrées s'est avérée être méthodologique. Le groupe a commencé son projet en prenant plusieurs mauvaises habitudes :
+\begin{itemize}
+\item \textbf{Mélanger texte et code.} Le groupe a commencé à programmer en utilisant \textbf{Jupyter Notebook}, une application web qui permet dans un même document l'édition de texte et la compilation et exécution de code. Si cette méthode est adaptée pour des codes courts présentant des résultats et des graphes, elle n'est pas recommandée pour la conception de plus gros projets.
+\item \textbf{Coder l'ensemble des étapes dans un même fichier.} Dans les premières versions du projet, les différentes étapes décrites précédemment sont juxtaposées dans un même fichier. Cela entraîne un manque de lisibilité lorsque le nombre de paramètres possibles ou de fonctions disponibles augmente.
+\item \textbf{Commenter de façon minimaliste.} Le groupe a d'abord simplement commenté le programme de façon à expliquer quelle partie du code appartenait à quelle étape du projet.\\
+\end{itemize}
+
+En dialoguant avec le tuteur, le groupe a compris que ce n'est pas le rôle des commentaires. Il est important de séparer chaque étape dans des fichiers séparés, pour gagner en flexibilité et en lisibilité. Les commentaires spécifient alors le comportement de chaque fonction, les arguments qu'elles prennent et ce qu'elles rendent. Par ailleurs, séparer les différentes étapes dans des fichiers distincts pousse à encapsuler chaque sous-étape dans une fonction, ce qui permet une meilleure gestion des (nombreux) paramètres du projet.\\
+
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.5]{jupyter_notebook_exemple.png} 
+\caption{Extrait des premiers codes, écrits avec \textbf{jupyter notebook}.}
+\label{jupyter_notebook_exemple}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.5]{py_exemple.png} 
+\caption{Extrait des codes plus récents, écrits exclusivement en python.}
+\label{py_exemple}
+\end{center}
+\end{figure}
+
+Une illustration de la progression de la mise en page du code est donnée figures \ref{jupyter_notebook_exemple} et \ref{py_exemple}. Sur le jupyter notebook on observe une progression linéaire qui mêle les différentes étapes. Les commentaires sont peu utilisés, le code et les remarques sont mélangés. Au contraire, l'extrait python est issu d'un fichier qui gère uniquement la génération de données. Les actions à effectuer sont encapsulées dans des fonctions, les rendant plus faciles à manipuler. Les commentaires prennent une partie importante du volume total de code, en spécifiant l'utilité et les arguments de chaque fonction.\\
+
+
+\subsection{Le réseau de neurones, la "boîte noire"}
+\label{hyperas}
+\label{boite_noire}
+
+Comme évoqué en \ref{fonctionnement_réseau}, les réseaux de neurones peuvent s'avérer difficiles à manipuler car ils sont incapables d'"expliquer" les résultats qu'ils rendent. Ils sont composés d'un ensemble considérables de paramètres donnant les poids et fonctions d'activation de chaque neurone, ce qui les rend rapidement illisibles. Aussi, bien que l'on soit capable d'évaluer leurs résultats, il est plus difficile de les expliquer et donc de les améliorer en cas de performances insuffisantes.\\
+\indent Le groupe a notamment bloqué plusieurs semaines sur l'amélioration de la précision relative du réseau, qui rencontrait un plateau à $10^{-2}$. L'approche empirique caractéristique des réseaux, couplée au grand nombre de paramètres disponibles (nombre et nature des données d'entraînement, nombre de couches et de neurones dans chaque couche, choix des fonctions d'activation, choix de la fonction à optimiser, choix de la fonction optimisant le réseau, nombre de cycles d'entraînement, ...) rend la recherche longue et laborieuse.\\
+\indent Le groupe a finalement reçu l'aide de M. Benjamin Donnot, qui travaille chez RTE, pour identifier les paramètres qui posaient problèmes. Il s'est avéré que le processus optimisant le réseau, la descente de gradient stochastique, est instable et converge trop lentement. Il en a donc conseillé une autre, grâce à laquelle le groupe a pu atteindre la précision relative cible de $10^{-6}$ pour les petits problèmes. Ce résultat est détaillé dans la partie \ref{resultats}.\\
+
+Par ailleurs, le groupe a parfois eu des difficultés à comprendre précisément le comportement des fonctions de \textbf{tensorflow} et de \textbf{keras}, qui fait l'interface avec \textbf{tensorflow}. Le code source est accessible mais complexe, et la documentation manque de précision.\\
+\indent Enfin, le groupe a passé du temps à se renseigner sur le fonctionnement de \textbf{hyperas}, une librairie permettant d'optimiser les hyperparamètres du réseau (i.e. non seulement les poids des neurones, mais aussi et surtout des paramètres comme le nombre de couches ou le nombre de neurones dans chaque couche). Malheureusement, la librairie s'est avérée très compliquée à intégrer à notre code, car beaucoup de conversions (typage, format des données, ...) sont nécessaires pour passer de l'un à l'autre. Par ailleurs, la librairie \textbf{hyperas} a rendu des erreurs nous paraissant anormales. Nous avons donc décidé de ne pas l'utiliser et d'optimiser manuellement les hyperparamètres.
+
+\subsection{Saturation mémoire, gestion de pointeurs et autres inattendus chronophages}
+\label{pb_divers}
+
+Le groupe a également passé beaucoup de temps à débuguer ses propres codes, malgré la mise en place de plusieurs gardes-fous comme le découpage rigoureux du projet en fonctions, ou un contrôle fréquent de la cohérence des typages. Deux exemples en lien avec la finalité du projet sont données ci-après.\\
+
+Initialement, le groupe avait structuré le fichier \textbf{generator} (cf. partie \ref{generator}) de façon à créer autant d'objets CPLEX que de nouveaux problèmes générés par l'utilisateur. Les tests se sont avérés concluants, mais lorsque que le groupe a essayé de générer une grande quantité de données le code a planté à cause d'une saturation mémoire. Le groupe a donc dû repenser la gestion mémoire du programme et son organisation. Finalement, le code crée autant d'objets CPLEX que de problèmes de base, puis crée un unique objet CPLEX qui sert pour générer l'ensemble des nouveaux problèmes. La mémoire ne sature plus, et le groupe a constaté un gain de temps important. La seconde version, après observation sur quelques cas particuliers, est plus rapide d'un facteur 5 environ. Cela est notamment dû à l'optimisation mise en place par CPLEX pour la résolution de problèmes : dans notre deuxième version ils sont tous générés à partir du même objet, et ne se distinguent que par une légère modification du second membre ; CPLEX est capable de réutiliser les résultats obtenus sur la version précédente pour résoudre très vite la suivante.\\
+
+La génération d'un problème se faisant à partir d'un problème déjà connu, il est nécessaire de copier le contenu de l'un dans l'autre. Malheureusement, le groupe a initialement mal pensé la gestion mémoire des objets CPLEX et plus précisément des pointeurs. En modifiant le contenu d'un problème nouveau, le code modifiait également le contenu du problème de base qui devait servir à générer d'autres problèmes. C'est en testant le code que le groupe a observé des phénomènes de marche aléatoire et qu'il a pu corriger l'erreur. Cette-dernière aurait pu se révéler problématique puisque le réseau de neurone aurait pu être biaisé par l'entrainement sur des données trop similaires entre elles.\\
+
+Ces difficultés sont bien entendu communes à tous les travaux faisant appel à la programmation. Elles méritent néanmoins d'être soulignées dans ce rapport parce qu'elles se sont avérées chronophages et qu'elles ont donné aux membres du groupe un aperçu des difficultés rencontrées au quotidien par les programmeurs.
+
+\subsection{Confinement}
+
+Le confinement a été mis en place au moment où le groupe comprenait que de meilleurs résultats seraient obtenus avec Adam. Il a donc dû exploiter cette information et terminer l'étude des petits problèmes à distance, ce qui n'a pas été facile.\\
+\indent En effet, il a perdu une ou deux séances de travail avant de se réorganiser, comme cela a d'ailleurs été le cas pour la plupart des cours à l'école. De plus, échanger et communiquer sur les résultats obtenus par chacun s'est révélé difficile, parce que le groupe avait pris l'habitude de communiquer informellement au cours de la semaine en se croisant dans l'établissement, ce qui n'est plus possible. Par ailleurs, il est plus compliqué de distribuer la parole en visioconférence qu'en présentiel.\\
+\indent Le groupe a malgré tout réussi à produire des résultats, qui sont présentés dans la partie suivante.
+
+\newpage
+\section{Résultats}
+\label{resultats}
+\subsection{Exemple d'application du code}
+
+Le code exemple ci-dessous montre que les différentes parties du programme détaillées plus haut interagissent correctement entre elles. En une vingtaine de lignes, le code :
+\begin{itemize}
+\item génère 10 000 petits problèmes et les résout ;
+\item les formate pour utilisation par un réseau de neurones ;
+\item crée et compile un réseau de neurones ;
+\item l'entraîne sur 9000 des problèmes ;
+\item effectue des prédictions sur les 1000 problèmes restant ;
+\item affiche un histogramme des précisions relatives de ces 1000 prédictions.\\
+\end{itemize}
+
+\lstdefinestyle{mystyle}{   
+    commentstyle=\color{gray},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{green},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+\lstinputlisting[language=Python]{exemple_utilisation.py}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.9]{exemple_utilisation.png}
+\caption{Histogramme montrant la précision relative obtenue sur les exemples d'entraînement.}
+\end{center}
+\end{figure}
+
+
+Le réseau est constitué de 2 couches de 4 et 10 neurones. Il optimise et affiche la précision relative ("mean absolute percentage error") en utilisant la fonction Adam. Il s'entraîne 30 fois sur chaque exemple d'entraînement.\\
+\indent Le temps d'exécution total sur une machine personnel est de l'ordre d'une minute, dont environ 40 secondes pour générer et résoudre les problèmes, ce qui est en pratique une étape destinée à n'être réalisée qu'une seule fois.\\
+
+Le groupe calcule lui-même la précision relative pour produire l'histogramme, avec la formule suivante :
+$$relative\_precision(solutions \ S, predictions \ P) = \frac{1}{N}\sum_{i=0}^{N}\Big| \frac{P - S}{S} \Big|$$
+\indent Il optimise cependant auparavant le réseau sur le loss \textbf{"mean\_absolute\_percentage\_error"}:
+$$loss = 100 * \Big| \frac{y_{true} - y_{pred}}{y_{true}} \Big|$$
+
+\subsection{Comparaison à la régression linéaire}
+
+Le groupe a pendant plusieurs semaines obtenu une erreur relative anormalement élevée. Afin de s'assurer que le problème venait de l'utilisation de \textbf{tensorflow} et pas de la partie du code qu'il a lui-même programmé, il a décidé de reprendre l'ensemble de la procédure en remplaçant le réseau de neurones par une régression linéaire optimisée par descente de gradient qu'il a également codé.\\
+\indent Pour ce test, le groupe a généré un ensemble de données avec une unique contrainte variable. Grâce à cette simplification, la courbe recherchée - i.e. la valeur de la solution en fonction du second membre des contraintes - devient une droite et peut donc être interpolée correctement par une simple régression linéaire.\\
+\indent Le réseau utilisé pour cette étude était constitué de deux couches de 2 et 1 neurones sans fonction d'activation, ce qui équivaut à une régression linéaire.\\
+
+Sur la figure \ref{with_neural_network}, on observe l'évolution de la précision relative des solutions prédites par un réseau de neurones, en fonction du numéro du cycle d'entraînement. On constate que la précision relative oscille et ne descend pas en-dessous de $-1.25$ en $log$, i.e. environ $5*10^{-2}$.\\
+
+Sur la figure \ref{with_linear_regression}, on observe les résultats donnés par une procédure identique, où l'ensemble du travail du groupe (génération des données, formatage, analyse des résultats) est repris à l'exception du réseau de neurones, qui est remplacé par la régression linéaire. Cette fois, on constate d'excellents résultats : la précision relative décroit jusqu'à atteindre une précision relative d'environ $10^{-8}$, ce qui correspond à la borne inférieure atteignable avec les \textbf{float} en python.\\
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.8]{with_neural_network.png}
+\caption{Évolution de la précision relative moyenne en fonction du nombre de cycles d'entraînement avec un réseau de neurones.}
+\label{with_neural_network}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.8]{with_linear_regression.png}
+\caption{Évolution de la précision relative moyenne en fonction du nombre de cycles d'entraînement avec une régression linéaire.}
+\label{with_linear_regression}
+\end{center}
+\end{figure}
+
+\newpage
+Cette démarche a permis au groupe de confirmer que la sous-performance de la procédure venait des paramètres choisis pour le réseau de neurones, et que le reste du code fonctionnait correctement.\\
+\indent Comme déjà évoqué partie \ref{boite_noire}, après quelques semaines de recherches il s'est avéré que c'est la fonction d'optimisation qui posait problème. Sur les conseils de Benjamin Donnot, qui travaille chez RTE, le groupe a remplacé la descente de gradient stochastique classique, trop instable, par un optimiseur utilisant l'algorithme d'Adam.\\ 
+\indent On constate figure \ref{with_Adam} que la précision relative moyenne descend alors sans difficultés en-dessous du plancher de $10^{-2}$ auquel s'est longtemps heurté le groupe.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.5]{with_Adam.png}
+\caption{Histogramme de la précision relative avec un réseau de neurones.}
+\label{with_Adam}
+\end{center}
+\end{figure}
+
+\subsection{Performances}
+
+On donne ici quelques exemples des performances obtenues par le groupe sur le petit problème.\\
+
+Pour un réseau :
+\begin{itemize}
+\item Constitué de trois couches de 23, 100 et 46 neurones ;
+\item Avec des Relu pour les fonctions d'activation ;
+\item Avec pour \textbf{loss} la fonction \textbf{mean\_absolute\_percentage\_error};
+\item Avec pour \textbf{metrics} la fonction \textbf{mean\_absolute\_percentage\_error};
+\item Avec pour \textbf{optimizer} la fonction \textbf{Adam};
+\item Avec un callback (cf. code en annexe \ref{code_pour_tableau}) ;
+\end{itemize}
+on obtient les résultats suivants :
+
+\renewcommand{\arraystretch}{2.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{|c||c|c|c|c|c|c|c|}
+\hline
+& 10 & 100 & 1 000 & 10 000 & 25 000 & 50 000 & 80 000\\
+\hline \hline
+5
+& $9,8*10^{-1}$
+& $9.3*10^{-1}$
+& $2,6*10^{-1}$
+& $1.7*10^{-2}$
+& $7.2*10^{-3}$
+& $2.6*10^{-2}$
+& $2.5*10^{-2}$\\
+\hline
+10
+& $9.9*10^{-1}$
+& $8.8*10^{-1}$
+& $2.5*10^{-2}$
+& $1.5*10^{-2}$
+& $5.1*10^{-4}$
+& $6.1*10^{-4}$
+& $4.5*10^{-4}$\\
+\hline
+15
+& $9.9*10^{-1}$
+& $9.0*10^{-1}$
+& $2.5*10^{-2}$
+& $1.1*10^{-2}$
+& $3.0*10^{-4}$
+& $2.8*10^{-4}$
+& $1.2*10^{-4}$\\
+\hline
+20
+& $9.9*10^{-1}$
+& $8.6*10^{-1}$
+& $2.4*10^{-2}$
+& $1.4*10^{-2}$
+& $3.1*10^{-5}$
+& $6.7*10^{-4}$
+& $6.8*10^{-5}$\\
+\hline
+30
+& $9.9*10^{-1}$
+& $8.2*10^{-1}$
+& $2.4*10^{-2}$
+& $8.4*10^{-3}$
+& $1.3*10^{-4}$
+& $1.8*10^{-4}$
+& $4.8*10^{-5}$\\
+\hline
+50
+& $9.9*10^{-1}$
+& $8.4*10^{-1}$
+& $2.6*10^{-2}$
+& $9.6*10^{-3}$
+& $1.9*10^{-5}$
+& $1.7*10^{-5}$
+& $3.9*10^{-5}$\\
+\hline
+70
+& $9.9*10^{-1}$
+& $9.0*10^{-1}$
+& $2.5*10^{-2}$
+& $9.4*10^{-3}$
+& $2.3*10^{-5}$
+& $1.4*10^{-5}$
+& \textcolor{red}{$\mathbf{3.9*10^{-6}}$}\\
+\hline
+100
+& $9.9*10^{-1}$
+& $8.0*10^{-1}$
+& $2.5*10^{-2}$
+& $8.6*10^{-3}$
+& \textcolor{red}{$\mathbf{7.9*10^{-6}}$}
+& \textcolor{red}{$\mathbf{4.0*10^{-6}}$}
+& \textcolor{red}{$\mathbf{2.8*10^{-6}}$}\\
+\hline
+\end{tabular}
+\caption{Précision relative moyenne rendue par le réseau de neurones défini ci-dessus, en fonction du nombre d'épochs (colonne de gauche) et du nombre d'exemples utilisés (ligne du haut).}
+\end{table}
+
+Lorsque le tableau fait référence à un nombre $N$ d'exemples utilisés, $0,8N$ sont utilisés pour l'entraînement du réseau (validation interne à \textbf{tensorflow} compris) et $0,2N$ servent à calculer la performance du réseau.\\
+\indent Dans cet exemple on utilise également un callback, qui permet de réduire le learning rate lorsque la précision relative commence à stagner.\\
+\indent Le code associé est donné en annexe \ref{code_pour_tableau}.\\
+
+Les données sont à prendre avec précaution : l'optimisation se faisant de façon stochastique sur des exemples qui ne sont pas toujours les mêmes, on n'obtiendrait pas exactement les mêmes résultats en recalculant le tableau.\\
+
+On observe néanmoins plusieurs informations intéressantes.\\
+\indent D'abord, et comme on s'y attend, pour un nombre d'epochs donné la précision s'améliore lorsque l'on donne plus d'exemples au réseau. L'effet est très marqué, on gagne souvent 4 voire 5 ordres de grandeur en passant de 8 exemples donnés au réseau (colonne 10) à 64 000 (colonne 80 000).\\
+\indent On constate que pour un nombre d'exemples compris entre 20 000 et 64 000, et avec le callback utilisé, le réseau converge au bout d'une centaine d'epochs. Il ne semble pas nécessaire d'entraîner plus le réseau, au-delà on ne gagne plus énormément en précision, comme visible figure \ref{convergence_reseau}.\\
+\indent La meilleure précision obtenue est ici $2.8*10^{-6}$, obtenue avec 64 000 exemples d'entraînement et 100 epochs. On atteint bien l'ordre de grandeur objectif.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.8]{convergence_reseau.png}
+\caption{Evolution de l'erreur relative en fonction du nombre d'epochs pour le réseau décrit plus haut. En bleu on observe le "training set", sur lequel le réseau est optimisé lors des entraînements. En orange on observe le "validation set", géré en interne par \textbf{tensorflow} et qui permet de s'assurer qu'il n'y a pas ou peu d'overfitting.}
+\label{convergence_reseau}
+\end{center}
+\end{figure}
+
+\subsection{Applications envisageables}
+
+Le groupe a constaté que même si l'entraînement du réseau peut prendre un certain temps, la prédiction des résultats est extrêmement rapide une fois qu'il est entraîné (relativement à la résolution exacte par CPLEX).\\
+
+A titre d'exemple, pour 20 000 petits problèmes :
+\begin{itemize}
+\item La résolution exacte avec CPLEX a mis 10,81 secondes ;
+\item La prédiction par un réseau de neurones déjà entraîné a mis 0,45 secondes.
+\end{itemize}
+
+Sur cet exemple précis le réseau est donc environ 25 fois plus rapide !\\
+
+Le groupe a manqué de temps pour mener une analyse rigoureuse et plus approfondie à ce sujet, qui sort d'ailleurs du cadre de son étude, mais il a constaté au cours des nombreux essais effectués que la résolution exacte des problèmes prenait toujours significativement plus de temps que la prédiction des solutions.\\
+
+Il semble donc envisageable que les réseaux de neurones puissent effectuer un pré-traitement des données de RTE, en discriminant les cas aberrants dont la résolution exacte est inutile.\\
+\indent Le groupe ne sait pas quelle est la proportion de problèmes aberrants parmi les données traitées par RTE, mais il y a des chances, étant donné l'ordre de grandeur donné plus haut, que ce pré-traitement permette de gagner du temps.
+
+\newpage
+\section{Pour aller plus loin}
+
+Le groupe a donc mené l'ensemble du projet en ce qui concerne les petits problèmes :
+\begin{itemize}
+\item Prise en main des outils ;
+\item Dialogue avec le partenaire afin de bien saisir les attendus ;
+\item Découpage du protocole en plusieurs étapes ;
+\item Programmation et débogage associé ;
+\item Étude des performances atteignables en fonction des paramètres choisis.\\
+\end{itemize}
+
+Il a par ailleurs atteint la précision relative de l'ordre de $10^{-6}$ attendue par RTE.\\
+
+Malheureusement, le groupe a manqué de temps et de ressources pour adapter ces résultats aux "vrais" problèmes utilisés par le partenaire.\\
+\indent D'abord, la version optimisée du \textbf{generator} (cf. partie \ref{pb_divers}) s'est elle-même avérée insuffisante, parce que créer un objet CPLEX pour chacun des 1042 exemples de base suffit à saturer la mémoire. Le groupe a donc décidé de ne créer qu'un seul objet CPLEX de base, qui prend successivement la valeur de chacun des problèmes de base.\\
+\indent Ensuite, et c'est ce qui a posé le plus de problèmes, la génération de ces gros problèmes nécessite trop de calculs pour pouvoir être faite sur des machines personnelles. Il faudrait au minimum plusieurs millions d'exemples pour pouvoir étudier les performances des réseaux, or pour en générer seulement 10 il faut à un ordinateur personnel un peu plus de 30 secondes, soit plus de 800 heures pour un million !\\
+\indent Enfin, en essayant tout de même de générer quelques gros problèmes, le groupe a créé des variantes n'ayant pas de solutions, ce qui indique que ces-dernières sont sorties du domaine dans lequel évoluent les données utilisées par RTE. Cependant, même en descendant la standard deviation à $10^{-9}$, le problème persiste et cette fois il y a un risque que les données soient trop semblables entre elles.\\
+\indent Étant donné le contexte actuel, le groupe a perdu quelques séances de travail avant de parvenir à se réorganiser de façon efficace et a donc manqué de temps pour se mettre d'accord avec le tuteur sur la stratégie à suivre et faire tourner le programme de génération de données sur une machine plus puissante.\\
+
+Le travail effectué est cependant loin d'être inutile, puisque l'ensemble du code est identique quelle que soit la taille du problème étudié. Par suite, 4 étapes sur les 5 énumérées plus haut sont déjà effectuées en ce qui concerne les "vrais" problèmes.\\
+\indent Par ailleurs, l'étude sur les petits problèmes avait valeur de test, en expérimentant la faisabilité de l'objectif sur des problèmes a priori simples. Les résultats sont encourageants, puisque la précision relative de l'ordre de $10^{-6}$ est finalement accessible sans difficulté une fois que les bons paramètres sont trouvés. De plus, le temps passé par le groupe à chercher les paramètres adaptés n'est pas perdu puisque qu'il est très probable que ce soient ces mêmes paramètres qui fonctionnent le mieux avec les gros problèmes.
+
+
+\newpage
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+
+Ce projet s'est révélé riche en enseignements pour le groupe.\\
+\indent D'abord, d'un point de vue technique, il a progressivement compris grâce à l'aide de son tuteur M. Ruiz comment structurer et présenter un code, dont la lisibilité a beaucoup gagné en clarté depuis le début du projet. Ce travail a également donné une bonne compréhension de ce qu'est le machine learning - en particulier les réseaux de neurones - et ce sur quoi il repose aux membres du groupe.\\
+\indent Sur le plan relationnel et organisationnel, ils ont également beaucoup appris. Le groupe a parfois perdu du temps à cause de certaines incompréhensions, ou parce qu'il a tardé à se mettre d'accord et à partager la même vision du projet. Il comprend maintenant mieux à quel point il est important de communiquer, et de bien communiquer. La mise en place du travail est une étape à part entière et ne doit pas être négligée, puisqu'elle pose les bases du projet et que ces-dernières doivent rester solides sur le long terme.\\
+
+Le groupe regrette d'avoir manqué de temps pour conclure l'étude sur les problèmes initialement transmis par le partenaire, mais est satisfait d'avoir mis en place une procédure fonctionnelle, grâce à laquelle il a notamment rendu des premiers résultats encourageants sur des problèmes expérimentaux.
+
+\newpage
+\section*{Références bibliographiques}
+\addcontentsline{toc}{section}{Références bibliographiques}
+
+\textbf{Sur l'optimisation linéaire :}\\
+\begin{itemize}
+\item ALLAIRE G., \textit{Analyse numérique et optimisation}, Éditions de l'École Polytechnique, Palaiseau  (2005)\\
+\end{itemize}
+
+
+\textbf{Sur les réseaux de neurones :}\\
+\begin{itemize}
+\item MALLAT S., \textit{L'Apprentissage par réseaux de neurones profonds}, Collège de France,\\
+https://www.college-de-france.fr (2019)\\
+\item NEVEU T., \textit{Se former à Tensorflow 2.0}, Chaîne Youtube "Thibault Neveu" (2019)\\
+\item NG A., textit{Machine Learning}, Stanford University, https://www.coursera.org\\
+\end{itemize}
+
+\textbf{Sur la prise en main des outils utilisés par le groupe :}\\
+\begin{itemize}
+\item GitHub Training Team, \textit{Introduction to Github}, https://lab.github.com/\\
+\item IBM Knowledge Center, \textit{MPS file format: industry standard},\\
+https://www.ibm.com/support/knowledgecenter/\\
+\item Source Forge, textit{CPLEX LP file format}, http://lpsolve.sourceforge.net/5.0/CPLEX-format.htm
+\end{itemize}
+
+\renewcommand{\thesection}{\Alph{section}}
+\setcounter{section}{0}
+
+\vspace{5 cm}
+\section{Diagramme de Gantt}
+\label{diagramme_gantt}
+
+Celui-ci a surtout été utilisé par le groupe pour démarrer le projet et gagner en dynamisme. Une fois la programmation initiée, le diagramme s'est révélé moins utile parce que les membres du groupe communiquaient alors mieux entre eux, et qu'il était difficile d'anticiper les différentes sous-tâches qui mèneraient à l'écriture du code final.
+
+\begin{figure}[H]
+\begin{center}
+\rotatebox{90}{
+\includegraphics[scale=0.7]{diagramme_gantt.png}}
+\caption{Diagramme de Gantt utilisé par le groupe au début du projet.}
+\end{center}
+\end{figure}
+
+
+\newpage
+\section{Extrait du code}
+\label{code}
+
+Dans cette annexe on donne le code \textbf{generator}.\\
+
+
+\lstdefinestyle{mystyle}{   
+    commentstyle=\color{gray},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{green},
+    basicstyle=\tiny,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+\lstinputlisting[language=Python]{generator.py}
+
+\newpage
+\section{Code utilisé pour générer le tableau de résultats}
+\label{code_pour_tableau}
+
+\lstdefinestyle{mystyle}{   
+    commentstyle=\color{gray},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{green},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+\lstinputlisting[language=Python]{code_pour_tableau.py}
+
+
+\end{document}
